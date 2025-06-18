@@ -2,6 +2,7 @@
 import React from 'react'
 import { Routes, Route, BrowserRouter } from "react-router-dom";
 import CustomerLayout from "./layouts/CustomerLayout";
+import AdminDashboard from "./pages/AdminDashboard";
 import "./assets/tailwind.css";
 
 
@@ -11,6 +12,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Halaman Dashboard Admin */}
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route 
           path="/" 
           element={
