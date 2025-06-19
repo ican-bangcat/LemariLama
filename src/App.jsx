@@ -8,6 +8,9 @@ import "./assets/tailwind.css";
 const HomePage = React.lazy(() => import("./pages/HomePage"));
 const Products = React.lazy(() => import("./pages/Products"));
 const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
+const CustomerPage = React.lazy(() => import("./pages/CustomerPage"));
+const OrderDashboard = React.lazy(() => import("./pages/OrderDashboard"));
+const HistoryPage = React.lazy(() => import("./pages/HistoryPage"));  
 const Cart= React.lazy(() => import("./pages/Cart"));
 
 // Wrapper component for customer pages with layout
@@ -46,6 +49,22 @@ function App() {
         <Route 
           path="/admin" 
           element={<AdminPageWrapper Component={AdminDashboard} />} 
+        />
+        <Route 
+          path="/admin/product" 
+          element={<AdminDashboard Component={AdminDashboard} />} 
+        />
+        <Route 
+          path="/admin/customer" 
+          element={<CustomerPage Component={CustomerPage} />} 
+        />
+        <Route 
+          path="/admin/order" 
+          element={<OrderDashboard Component={OrderDashboard} />} 
+        />
+        <Route 
+          path="/admin/history" 
+          element={<HistoryPage Component={HistoryPage} />} 
         />
         
         {/* Customer Routes - With CustomerLayout */}

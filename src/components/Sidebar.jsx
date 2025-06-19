@@ -1,6 +1,6 @@
-import { SiSalesforce } from "react-icons/si"; 
-import { AiOutlineMessage } from "react-icons/ai"; 
-import { AiFillCustomerService } from "react-icons/ai"; 
+import { SiSalesforce } from "react-icons/si";
+import { AiOutlineMessage } from "react-icons/ai";
+import { AiFillCustomerService } from "react-icons/ai";
 import { AiOutlineFundView } from "react-icons/ai";
 import { NavLink } from "react-router-dom";
 
@@ -17,7 +17,7 @@ const Sidebar = () => {
             <div className="border-t border-gray-300"></div>
             <div className="flex flex-col gap-2 ">
                 <NavLink
-                    to="/admin/overview"
+                    to="/admin/product"
                     className={({ isActive }) =>
                         `px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 ${isActive
                             ? "bg-black text-white"
@@ -26,11 +26,11 @@ const Sidebar = () => {
                     }
                 >
                     <AiOutlineFundView className="text-lg" />
-                    Overview
+                    Product
                 </NavLink>
 
                 <NavLink
-                    to="/admin/overview"
+                    to="/admin/customer"
                     className={({ isActive }) =>
                         `px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 ${isActive
                             ? "bg-black text-white"
@@ -38,11 +38,11 @@ const Sidebar = () => {
                         }`
                     }
                 >
-                    <AiFillCustomerService  className="text-lg" />
+                    <AiFillCustomerService className="text-lg" />
                     Customer
                 </NavLink>
                 <NavLink
-                    to="/admin/overview"
+                    to="/admin/order"
                     className={({ isActive }) =>
                         `px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 ${isActive
                             ? "bg-black text-white"
@@ -51,10 +51,10 @@ const Sidebar = () => {
                     }
                 >
                     <AiOutlineMessage className="text-lg" />
-                    Messages
+                    Order
                 </NavLink>
                 <NavLink
-                    to="/admin/overview"
+                    to="/admin/history"
                     className={({ isActive }) =>
                         `px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 ${isActive
                             ? "bg-black text-white"
@@ -63,7 +63,7 @@ const Sidebar = () => {
                     }
                 >
                     <SiSalesforce className="text-lg" />
-                    Sales
+                    History
                 </NavLink>
             </div>
         </div>
