@@ -1,24 +1,5 @@
 @import "tailwindcss";
 
-/* @layer base {
-
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
-  html, body {
-    background-color: white;
-    color: black;
-  }
-
-  #root {
-    background-color: white;
-    min-height: 100vh;
-  }
-} */
- /* src/assets/tailwind.css */
 @layer base {
   html, body, #root {
     @apply bg-white text-black min-h-screen w-full overflow-x-hidden;
