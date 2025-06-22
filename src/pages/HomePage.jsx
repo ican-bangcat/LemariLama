@@ -210,7 +210,7 @@ const HomePage = () => {
               <img
                 src="/images/hero-fashion.png"
                 alt="Fashion Hero"
-                className="w-full aspect-square object-contain rounded-xl shadow-2xl"
+                className="w-full aspect-square object-contain rounded-xl "
               />
             </div>
           </div>
@@ -247,7 +247,7 @@ const HomePage = () => {
             ))}
           </div>
           <div className="text-center mt-12">
-            <button className="border-2 border-gray-300 text-black px-8 py-3 rounded-full hover:bg-gray-50 transition-colors font-medium">
+            <button className="border-2 border-gray-300 text-white px-8 py-3 rounded-full hover:bg-gray-50 transition-colors font-medium">
               View All
             </button>
           </div>
@@ -268,7 +268,7 @@ const HomePage = () => {
             ))}
           </div>
           <div className="text-center mt-12">
-            <button className="border-2 border-gray-300 text-black px-8 py-3 rounded-full hover:bg-gray-50 transition-colors font-medium">
+            <button className="border-2 border-gray-300 text-white px-8 py-3 rounded-full hover:bg-gray-50 transition-colors font-medium">
               View All
             </button>
           </div>
@@ -322,13 +322,13 @@ const HomePage = () => {
                 onClick={prevTestimonial}
                 className="p-2 border-2 border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
               >
-                <ArrowLeft size={20} />
+                <ArrowLeft size={20} color="white"/>
               </button>
               <button
                 onClick={nextTestimonial}
                 className="p-2 border-2 border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
               >
-                <ArrowRight size={20} />
+                <ArrowRight size={20} color="white"/>
               </button>
             </div>
           </div>

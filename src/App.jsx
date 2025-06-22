@@ -1,8 +1,9 @@
-// App.jsx - Clean version with admin and products routes
+// App.jsx - Fixed version
 import React from "react";
 import { Routes, Route, BrowserRouter } from "react-router-dom";
 import CustomerLayout from "./layouts/CustomerLayout";
 import "./assets/tailwind.css";
+// Remove AuthLayout import since it's not being used correctly
 
 // Lazy load components
 const HomePage = React.lazy(() => import("./pages/HomePage"));
@@ -11,7 +12,9 @@ const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
 const CustomerPage = React.lazy(() => import("./pages/CustomerPage"));
 const OrderDashboard = React.lazy(() => import("./pages/OrderDashboard"));
 const HistoryPage = React.lazy(() => import("./pages/HistoryPage"));  
-const Cart= React.lazy(() => import("./pages/Cart"));
+const Cart = React.lazy(() => import("./pages/Cart"));
+const Login = React.lazy(() => import("./pages/auth/Login"));
+const Register = React.lazy(() => import("./pages/auth/Register"));
 
 // Wrapper component for customer pages with layout
 const CustomerPageWrapper = ({ Component }) => (
@@ -26,6 +29,19 @@ const CustomerPageWrapper = ({ Component }) => (
       <Component />
     </React.Suspense>
   </CustomerLayout>
+);
+
+// Wrapper component for auth pages (Login/Register)
+const AuthPageWrapper = ({ Component }) => (
+  <React.Suspense
+    fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-xl">Loading...</div>
+      </div>
+    }
+  >
+    <Component />
+  </React.Suspense>
 );
 
 // Wrapper component for admin pages (no customer layout)
@@ -52,19 +68,19 @@ function App() {
         />
         <Route 
           path="/admin/product" 
-          element={<AdminDashboard Component={AdminDashboard} />} 
+          element={<AdminPageWrapper Component={AdminDashboard} />} 
         />
         <Route 
           path="/admin/customer" 
-          element={<CustomerPage Component={CustomerPage} />} 
+          element={<AdminPageWrapper Component={CustomerPage} />} 
         />
         <Route 
           path="/admin/order" 
-          element={<OrderDashboard Component={OrderDashboard} />} 
+          element={<AdminPageWrapper Component={OrderDashboard} />} 
         />
         <Route 
           path="/admin/history" 
-          element={<HistoryPage Component={HistoryPage} />} 
+          element={<AdminPageWrapper Component={HistoryPage} />} 
         />
         
         {/* Customer Routes - With CustomerLayout */}
@@ -76,8 +92,19 @@ function App() {
           path="/products" 
           element={<CustomerPageWrapper Component={Products} />} 
         />
-        <Route path="/cart" 
+        <Route 
+          path="/cart" 
           element={<CustomerPageWrapper Component={Cart} />} 
+        />
+
+        {/* Auth Routes - No Layout (Auth components have their own layout) */}
+        <Route 
+          path="/login" 
+          element={<AuthPageWrapper Component={Login} />} 
+        />
+        <Route 
+          path="/register" 
+          element={<AuthPageWrapper Component={Register} />} 
         />
       </Routes>
     </BrowserRouter>
