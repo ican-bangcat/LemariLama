@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import AuthLayout from "../../layouts/AuthLayout"; // Add proper import
+import AuthLayout from "../../layouts/AuthLayout";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -21,7 +21,8 @@ const Register = () => {
     });
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
     console.log("Register form submitted:", formData);
   };
 
@@ -32,7 +33,7 @@ const Register = () => {
   return (
     <AuthLayout>
       {/* Register Card */}
-      <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+      <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 max-w-md w-full">
         {/* Logo */}
         <div className="flex items-center justify-center mb-8">
           <img
@@ -40,7 +41,6 @@ const Register = () => {
             alt="Lemari Lama Logo"
             className="w-10 h-10 mr-3"
             onError={(e) => {
-              // Fallback if image fails to load
               e.target.style.display = "none";
               e.target.nextSibling.style.display = "flex";
             }}
@@ -52,9 +52,9 @@ const Register = () => {
 
         {/* Form Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">
+          <h2 className="text-3xl font-bold text-gray-900 mb-3">
             Create Account
-          </h1>
+          </h2>
           <p className="text-gray-600 leading-relaxed">
             Join us today! Fill in your details to get started with your
             personal account.
@@ -62,7 +62,7 @@ const Register = () => {
         </div>
 
         {/* Register Form */}
-        <div className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Name Field */}
           <div>
             <label
@@ -78,49 +78,52 @@ const Register = () => {
               value={formData.name}
               onChange={handleInputChange}
               placeholder="Enter your full name"
-              className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
               required
             />
           </div>
 
-          {/* Email Field */}
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-semibold text-gray-700 mb-2"
-            >
-              Email Address
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              placeholder="john.doe@example.com"
-              className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
-              required
-            />
-          </div>
+          {/* Email and Phone Number in one row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Email Field */}
+            <div>
+              <label
+                htmlFor="email"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                Email Address
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="john.doe@example.com"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
+                required
+              />
+            </div>
 
-          {/* Phone Number Field */}
-          <div>
-            <label
-              htmlFor="phoneNumber"
-              className="block text-sm font-semibold text-gray-700 mb-2"
-            >
-              Phone Number
-            </label>
-            <input
-              type="tel"
-              id="phoneNumber"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleInputChange}
-              placeholder="+62 812 3456 7890"
-              className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
-              required
-            />
+            {/* Phone Number Field */}
+            <div>
+              <label
+                htmlFor="phoneNumber"
+                className="block text-sm font-semibold text-gray-700 mb-2"
+              >
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                id="phoneNumber"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleInputChange}
+                placeholder="+62 812 3456 7890"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
+                required
+              />
+            </div>
           </div>
 
           {/* Password Field */}
@@ -139,16 +142,20 @@ const Register = () => {
                 value={formData.password}
                 onChange={handleInputChange}
                 placeholder="Create a strong password"
-                className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white pr-12"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white pr-12"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200 bg-transparent border-none outline-none p-0"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showPassword ? (
+                  <EyeOff size={20} className="opacity-70" />
+                ) : (
+                  <Eye size={20} className="opacity-70" />
+                )}
               </button>
             </div>
           </div>
@@ -169,18 +176,22 @@ const Register = () => {
                 value={formData.confirmPassword}
                 onChange={handleInputChange}
                 placeholder="Confirm your password"
-                className="w-full px-4 py-3.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white pr-12"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white pr-12"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200 bg-transparent border-none outline-none p-0"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors duration-200"
                 aria-label={
                   showConfirmPassword ? "Hide password" : "Show password"
                 }
               >
-                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                {showConfirmPassword ? (
+                  <EyeOff size={20} className="opacity-70" />
+                ) : (
+                  <Eye size={20} className="opacity-70" />
+                )}
               </button>
             </div>
           </div>
@@ -200,21 +211,20 @@ const Register = () => {
               className="text-sm text-gray-700 leading-relaxed"
             >
               I agree to the{" "}
-              <span className="text-blue-600 hover:text-blue-700 cursor-pointer font-medium underline decoration-1 underline-offset-2">
+              <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
                 Terms of Service
-              </span>{" "}
+              </a>{" "}
               and{" "}
-              <span className="text-blue-600 hover:text-blue-700 cursor-pointer font-medium underline decoration-1 underline-offset-2">
+              <a href="#" className="text-blue-600 hover:text-blue-700 font-medium">
                 Privacy Policy
-              </span>
+              </a>
             </label>
           </div>
 
           {/* Create Account Button */}
           <button
-            type="button"
-            onClick={handleSubmit}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+            type="submit"
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98]"
           >
             Create Account
           </button>
@@ -222,9 +232,9 @@ const Register = () => {
           {/* Login Link */}
           <div className="text-center pt-2">
             <span className="text-gray-600">Already have an account? </span>
-            <span className="text-blue-600 hover:text-blue-700 font-semibold cursor-pointer underline decoration-1 underline-offset-2">
+            <a href="#" className="text-blue-600 hover:text-blue-700 font-semibold">
               Sign In
-            </span>
+            </a>
           </div>
 
           {/* Divider */}
@@ -243,7 +253,7 @@ const Register = () => {
           <button
             type="button"
             onClick={handleGoogleSignup}
-            className="w-full border-2 border-gray-200 py-3.5 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 flex items-center justify-center space-x-3 shadow-sm hover:shadow-md"
+            className="w-full border border-gray-200 py-3.5 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 flex items-center justify-center space-x-3 shadow-sm hover:shadow-md active:scale-[0.98]"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -263,9 +273,9 @@ const Register = () => {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            <span className="text-white">Continue with Google</span>
+            <span className="text-gray-700">Continue with Google</span>
           </button>
-        </div>
+        </form>
       </div>
     </AuthLayout>
   );
