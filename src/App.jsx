@@ -8,13 +8,15 @@ import "./assets/tailwind.css";
 // Lazy load components
 const HomePage = React.lazy(() => import("./pages/HomePage"));
 const Products = React.lazy(() => import("./pages/Products"));
-const AdminDashboard = React.lazy(() => import("./pages/AdminDashboard"));
+const AdminProduct = React.lazy(() => import("./pages/AdminProduct"));
+const AdminHome = React.lazy(() => import("./pages/AdminHome"));
 const CustomerPage = React.lazy(() => import("./pages/CustomerPage"));
 const OrderDashboard = React.lazy(() => import("./pages/OrderDashboard"));
-const HistoryPage = React.lazy(() => import("./pages/HistoryPage"));  
+const HistoryPage = React.lazy(() => import("./pages/HistoryPage"));
 const Cart = React.lazy(() => import("./pages/Cart"));
 const Login = React.lazy(() => import("./pages/auth/Login"));
 const Register = React.lazy(() => import("./pages/auth/Register"));
+
 
 // Wrapper component for customer pages with layout
 const CustomerPageWrapper = ({ Component }) => (
@@ -62,49 +64,50 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Admin Routes - No CustomerLayout */}
-        <Route 
-          path="/admin" 
-          element={<AdminPageWrapper Component={AdminDashboard} />} 
+        <Route
+          path="/admin/dashboard"
+          element={<AdminPageWrapper Component={AdminHome} />}
         />
-        <Route 
-          path="/admin/product" 
-          element={<AdminPageWrapper Component={AdminDashboard} />} 
+        <Route
+          path="/admin/product"
+          element={<AdminPageWrapper Component={AdminProduct} />}
         />
-        <Route 
-          path="/admin/customer" 
-          element={<AdminPageWrapper Component={CustomerPage} />} 
+        <Route
+          path="/admin/customer"
+          element={<AdminPageWrapper Component={CustomerPage} />}
         />
-        <Route 
-          path="/admin/order" 
-          element={<AdminPageWrapper Component={OrderDashboard} />} 
+        <Route
+          path="/admin/order"
+          element={<AdminPageWrapper Component={OrderDashboard} />}
         />
-        <Route 
-          path="/admin/history" 
-          element={<AdminPageWrapper Component={HistoryPage} />} 
+        <Route
+          path="/admin/history"
+          element={<AdminPageWrapper Component={HistoryPage} />}
         />
-        
+      
+
         {/* Customer Routes - With CustomerLayout */}
-        <Route 
-          path="/" 
-          element={<CustomerPageWrapper Component={HomePage} />} 
+        <Route
+          path="/"
+          element={<CustomerPageWrapper Component={HomePage} />}
         />
-        <Route 
-          path="/products" 
-          element={<CustomerPageWrapper Component={Products} />} 
+        <Route
+          path="/products"
+          element={<CustomerPageWrapper Component={Products} />}
         />
-        <Route 
-          path="/cart" 
-          element={<CustomerPageWrapper Component={Cart} />} 
+        <Route
+          path="/cart"
+          element={<CustomerPageWrapper Component={Cart} />}
         />
 
         {/* Auth Routes - No Layout (Auth components have their own layout) */}
-        <Route 
-          path="/login" 
-          element={<AuthPageWrapper Component={Login} />} 
+        <Route
+          path="/login"
+          element={<AuthPageWrapper Component={Login} />}
         />
-        <Route 
-          path="/register" 
-          element={<AuthPageWrapper Component={Register} />} 
+        <Route
+          path="/register"
+          element={<AuthPageWrapper Component={Register} />}
         />
       </Routes>
     </BrowserRouter>

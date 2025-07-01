@@ -1,9 +1,10 @@
+import { useState } from "react";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import Footer from "../components/Footer";
 
 const OrderDashboard = () => {
-  const recentOrders = [
+  const [orders, setOrders] = useState([
     {
       id: "#ORD-001",
       customer: "Agus Ramadhan",
@@ -28,22 +29,25 @@ const OrderDashboard = () => {
       date: "2025-06-16",
       status: "Selesai",
     },
-  ];
+  ]);
+
+  const handleStatusChange = (index, newStatus) => {
+    const updatedOrders = [...orders];
+    updatedOrders[index].status = newStatus;
+    setOrders(updatedOrders);
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
-      {/* Sidebar tetap di kiri */}
       <div className="w-60 fixed top-0 left-0 h-screen z-10 bg-white shadow-md">
         <Sidebar />
       </div>
 
-      {/* Konten utama */}
       <div className="flex-1 flex flex-col ml-60 bg-gray-100">
         <Topbar />
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           <h1 className="text-2xl font-bold">Order LemariLama</h1>
 
-          {/* Statistik */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card color="purple" title="New Orders" value="35,673" desc="200% (30 days)" />
             <Card color="green" title="Total Income" value="$14,966" desc="Increased by 7.35%" />
@@ -58,7 +62,6 @@ const OrderDashboard = () => {
             <Card color="red" title="Pending Orders" value="58" desc="Waiting for confirmation" />
           </div>
 
-          {/* Tabel Order Terbaru */}
           <div className="bg-white p-6 rounded-xl shadow-md mt-6">
             <h2 className="text-xl font-semibold mb-4">Orderan Terbaru</h2>
             <div className="overflow-x-auto">
@@ -74,14 +77,24 @@ const OrderDashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentOrders.map((order, index) => (
+                  {orders.map((order, index) => (
                     <tr key={index} className="hover:bg-gray-50">
                       <td className="px-4 py-2">{order.id}</td>
                       <td className="px-4 py-2">{order.customer}</td>
                       <td className="px-4 py-2">{order.product}</td>
                       <td className="px-4 py-2">{order.price}</td>
                       <td className="px-4 py-2">{order.date}</td>
-                      <td className="px-4 py-2 font-medium text-green-600">{order.status}</td>
+                      <td className="px-4 py-2">
+                        <select
+                          value={order.status}
+                          onChange={(e) => handleStatusChange(index, e.target.value)}
+                          className="border border-gray-300 rounded-md px-2 py-1 text-sm"
+                        >
+                          <option value="Diproses">Diproses</option>
+                          <option value="Dikirim">Dikirim</option>
+                          <option value="Selesai">Selesai</option>
+                        </select>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -95,7 +108,6 @@ const OrderDashboard = () => {
   );
 };
 
-// Komponen Kartu Statistik
 const Card = ({ color, title, value, desc }) => (
   <div className={`bg-${color}-100 p-6 rounded-xl shadow-md`}>
     <h3 className="text-sm font-semibold text-gray-700">{title}</h3>

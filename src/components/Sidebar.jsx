@@ -1,3 +1,4 @@
+import { MdDashboardCustomize } from "react-icons/md"; 
 import { SiSalesforce } from "react-icons/si";
 import { AiOutlineMessage } from "react-icons/ai";
 import { AiFillCustomerService } from "react-icons/ai";
@@ -16,6 +17,18 @@ const Sidebar = () => {
             </div>
             <div className="border-t border-gray-300"></div>
             <div className="flex flex-col gap-2 ">
+                <NavLink
+                    to="/admin/dashboard"
+                    className={({ isActive }) =>
+                        `px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-center gap-2 ${isActive
+                            ? "bg-black text-white"
+                            : "bg-white text-black hover:bg-gray-200"
+                        }`
+                    }
+                >
+                    <MdDashboardCustomize className="text-lg" />
+                    Dashboard
+                </NavLink>
                 <NavLink
                     to="/admin/product"
                     className={({ isActive }) =>
@@ -51,7 +64,7 @@ const Sidebar = () => {
                     }
                 >
                     <AiOutlineMessage className="text-lg" />
-                    Order
+                    Manage Pesanan
                 </NavLink>
                 <NavLink
                     to="/admin/history"
