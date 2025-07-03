@@ -1,11 +1,16 @@
-// App.jsx - Fixed version
 import React from "react";
-import { Routes, Route, BrowserRouter } from "react-router-dom";
-import CustomerLayout from "./layouts/CustomerLayout";
-import "./assets/tailwind.css";
-// Remove AuthLayout import since it's not being used correctly
+import { Routes, Route, BrowserRouter, Navigate, Outlet } from "react-router-dom";
+// Pastikan path ini benar sesuai struktur folder Anda
+import { useAuth } from "./pages/contexts/AuthContext"; 
 
-// Lazy load components
+// Layouts
+import CustomerLayout from "./layouts/CustomerLayout";
+//import AdminLayout from "./layouts/AdminLayout"; // Uncomment jika Anda punya AdminLayout
+
+// Assets
+import "./assets/tailwind.css";
+
+// Lazy load pages
 const HomePage = React.lazy(() => import("./pages/HomePage"));
 const Products = React.lazy(() => import("./pages/Products"));
 const AdminProduct = React.lazy(() => import("./pages/AdminProduct"));
@@ -17,99 +22,96 @@ const Cart = React.lazy(() => import("./pages/Cart"));
 const Login = React.lazy(() => import("./pages/auth/Login"));
 const Register = React.lazy(() => import("./pages/auth/Register"));
 
-
-// Wrapper component for customer pages with layout
-const CustomerPageWrapper = ({ Component }) => (
-  <CustomerLayout>
-    <React.Suspense
-      fallback={
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-xl">Loading...</div>
-        </div>
-      }
-    >
-      <Component />
-    </React.Suspense>
-  </CustomerLayout>
+// Komponen untuk fallback saat lazy loading
+const SuspenseLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="text-xl">Loading...</div>
+  </div>
 );
 
-// Wrapper component for auth pages (Login/Register)
-const AuthPageWrapper = ({ Component }) => (
-  <React.Suspense
-    fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl">Loading...</div>
-      </div>
+// Komponen untuk melindungi rute berdasarkan role
+const ProtectedRoute = ({ requiredRole }) => {
+  const { user, profile, loading } = useAuth();
+
+  if (loading) {
+    return <SuspenseLoader />;
+  }
+
+  // Jika tidak ada user, arahkan ke halaman login
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Jika role dibutuhkan dan role user tidak sesuai, arahkan ke halaman utama
+  if (requiredRole && profile?.role !== requiredRole) {
+    // Arahkan admin ke dashboard mereka, customer ke home
+    const redirectPath = profile?.role === 'admin' ? '/admin/dashboard' : '/';
+    return <Navigate to={redirectPath} replace />;
+  }
+  
+  // Jika semua kondisi terpenuhi, tampilkan kontennya
+  return <Outlet />;
+};
+
+// Komponen untuk rute tamu (hanya bisa diakses jika belum login)
+const GuestRoute = () => {
+    const { user, loading } = useAuth();
+    if (loading) {
+        return <SuspenseLoader />;
     }
-  >
-    <Component />
-  </React.Suspense>
-);
-
-// Wrapper component for admin pages (no customer layout)
-const AdminPageWrapper = ({ Component }) => (
-  <React.Suspense
-    fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-xl">Loading...</div>
-      </div>
-    }
-  >
-    <Component />
-  </React.Suspense>
-);
+    // Jika sudah ada user, arahkan ke halaman utama, jangan tampilkan login/register lagi
+    return user ? <Navigate to="/" replace /> : <Outlet />;
+}
 
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Admin Routes - No CustomerLayout */}
-        <Route
-          path="/admin/dashboard"
-          element={<AdminPageWrapper Component={AdminHome} />}
-        />
-        <Route
-          path="/admin/product"
-          element={<AdminPageWrapper Component={AdminProduct} />}
-        />
-        <Route
-          path="/admin/customer"
-          element={<AdminPageWrapper Component={CustomerPage} />}
-        />
-        <Route
-          path="/admin/order"
-          element={<AdminPageWrapper Component={OrderDashboard} />}
-        />
-        <Route
-          path="/admin/history"
-          element={<AdminPageWrapper Component={HistoryPage} />}
-        />
-      
+      <React.Suspense fallback={<SuspenseLoader />}>
+        <Routes>
+          {/* --- Rute Publik --- */}
+          {/* HomePage bisa diakses semua orang, tapi tetap pakai CustomerLayout */}
+          <Route 
+            path="/" 
+            element={
+              <CustomerLayout>
+                <HomePage />
+              </CustomerLayout>
+            } 
+          />
 
-        {/* Customer Routes - With CustomerLayout */}
-        <Route
-          path="/"
-          element={<CustomerPageWrapper Component={HomePage} />}
-        />
-        <Route
-          path="/products"
-          element={<CustomerPageWrapper Component={Products} />}
-        />
-        <Route
-          path="/cart"
-          element={<CustomerPageWrapper Component={Cart} />}
-        />
+          {/* --- Rute untuk Tamu (belum login) --- */}
+          <Route element={<GuestRoute />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+          </Route>
 
-        {/* Auth Routes - No Layout (Auth components have their own layout) */}
-        <Route
-          path="/login"
-          element={<AuthPageWrapper Component={Login} />}
-        />
-        <Route
-          path="/register"
-          element={<AuthPageWrapper Component={Register} />}
-        />
-      </Routes>
+          {/* --- Rute untuk Customer (harus login & role 'customer') --- */}
+          <Route element={<ProtectedRoute requiredRole="customer" />}>
+            <Route element={<CustomerLayout />}>
+              {/* HomePage sudah publik, jadi tidak perlu di sini lagi */}
+              <Route path="/products" element={<Products />} />
+              <Route path="/cart" element={<Cart />} />
+              {/* Tambahkan rute customer lainnya di sini */}
+            </Route>
+          </Route>
+
+          {/* --- Rute untuk Admin (harus login & role 'admin') --- */}
+          <Route element={<ProtectedRoute requiredRole="admin" />}>
+            {/* Jika punya AdminLayout, bisa dibungkus di sini */}
+            {/* <Route element={<AdminLayout />}> */}
+              <Route path="/admin/dashboard" element={<AdminHome />} />
+              <Route path="/admin/product" element={<AdminProduct />} />
+              <Route path="/admin/customer" element={<CustomerPage />} />
+              <Route path="/admin/order" element={<OrderDashboard />} />
+              <Route path="/admin/history" element={<HistoryPage />} />
+            {/* </Route> */}
+          </Route>
+
+          {/* --- Rute Fallback --- */}
+          {/* Jika halaman tidak ditemukan, arahkan ke halaman utama */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </React.Suspense>
     </BrowserRouter>
   );
 }
