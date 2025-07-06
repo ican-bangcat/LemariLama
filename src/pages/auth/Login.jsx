@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+
+
+import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from "react-router-dom";
 import { signInUser } from '../services/auth';
+import { useAuth } from '../contexts/AuthContext';
 import AuthLayout from '../../layouts/AuthLayout';
 
 const Login = () => {
@@ -13,6 +16,15 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Redirect ke dashboard jika sudah login
+  useEffect(() => {
+    if (user) {
+      console.log("🔄 User logged in, redirecting to dashboard");
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleInputChange = (e) => {
     setFormData({
@@ -25,11 +37,17 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    
     try {
-      await signInUser(formData.email, formData.password);
-      // Navigasi akan ditangani secara otomatis oleh App.jsx
-      // navigate('/');
+      console.log("🔄 Attempting login...");
+      const result = await signInUser(formData.email, formData.password);
+      console.log("✅ Login successful:", result);
+      
+      // Navigasi akan ditangani oleh useEffect di atas setelah user state berubah
+      // Tidak perlu navigate manual di sini
+      
     } catch (err) {
+      console.error("❌ Login error:", err);
       setError(err.message);
     } finally {
       setLoading(false);

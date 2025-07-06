@@ -1,4 +1,12 @@
-:root {
+@import "tailwindcss";
+/* Ini adalah sintaks yang benar untuk Tailwind CSS v4.
+  'preflight' adalah nama baru untuk 'base'.
+  'utilities' berisi semua kelas utilitas.
+*/
+/* @import "tailwindcss/preflight";
+@import "tailwindcss/utilities"; */
+
+/* :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
@@ -66,4 +74,4 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
-
+ */

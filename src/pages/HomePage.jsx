@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom"; // Ditambahkan
 import { Star, ArrowLeft, ArrowRight } from "lucide-react";
 
 // ProductCard Component
@@ -148,7 +149,6 @@ const HomePage = () => {
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-b from-gray-50 to-white overflow-hidden">
-        {/* Decorative Elements */}
         <div className="absolute top-20 right-20 w-16 h-16 bg-black transform rotate-45 hidden lg:block"></div>
         <div className="absolute bottom-20 right-40 w-12 h-12 bg-black transform rotate-45 hidden lg:block"></div>
         <div className="absolute top-40 left-1/2 w-6 h-6 bg-black transform rotate-45 hidden lg:block"></div>
@@ -168,9 +168,12 @@ const HomePage = () => {
                 garments, designed to bring out your individuality and cater to
                 your sense of style.
               </p>
-              <button className="bg-black text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-gray-800 transition-colors shadow-lg">
-                Shop Now
-              </button>
+              
+              <Link to="/products">
+                <button className="bg-black text-white px-8 py-4 rounded-full text-lg font-medium hover:bg-gray-800 transition-colors shadow-lg">
+                  Shop Now
+                </button>
+              </Link>
 
               {/* Stats */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mt-12 text-center lg:text-left">
@@ -199,12 +202,6 @@ const HomePage = () => {
               </div>
             </div>
 
-            {/* Hero Image */}
-            {/* <div className="relative">
-              <div className="aspect-square bg-gradient-to-br from-gray-200 to-gray-400 rounded-xl flex items-center justify-center shadow-2xl">
-                <span className="text-gray-600 text-xl font-medium">Hero Fashion Image</span>
-              </div>
-            </div> */}
             {/* Hero Image */}
             <div className="relative">
               <img
@@ -247,7 +244,7 @@ const HomePage = () => {
             ))}
           </div>
           <div className="text-center mt-12">
-            <button className="border-2 border-gray-300 text-white px-8 py-3 rounded-full hover:bg-gray-50 transition-colors font-medium">
+            <button className="border-2 border-gray-300 text-black px-8 py-3 rounded-full hover:bg-gray-100 transition-colors font-medium">
               View All
             </button>
           </div>
@@ -268,7 +265,7 @@ const HomePage = () => {
             ))}
           </div>
           <div className="text-center mt-12">
-            <button className="border-2 border-gray-300 text-white px-8 py-3 rounded-full hover:bg-gray-50 transition-colors font-medium">
+            <button className="border-2 border-gray-300 text-black px-8 py-3 rounded-full hover:bg-gray-100 transition-colors font-medium">
               View All
             </button>
           </div>
@@ -320,15 +317,15 @@ const HomePage = () => {
             <div className="flex space-x-2">
               <button
                 onClick={prevTestimonial}
-                className="p-2 border-2 border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+                className="p-2 border-2 border-gray-300 rounded-full hover:bg-gray-100 transition-colors"
               >
-                <ArrowLeft size={20} color="white"/>
+                <ArrowLeft size={20} className="text-black" />
               </button>
               <button
                 onClick={nextTestimonial}
-                className="p-2 border-2 border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+                className="p-2 border-2 border-gray-300 rounded-full hover:bg-gray-100 transition-colors"
               >
-                <ArrowRight size={20} color="white"/>
+                <ArrowRight size={20} className="text-black" />
               </button>
             </div>
           </div>
@@ -404,14 +401,14 @@ const HomePage = () => {
                 wear. From women to men.
               </p>
               <div className="flex space-x-4">
-                {["Twitter", "Facebook", "Instagram", "GitHub"].map(
+                {["T", "F", "I", "G"].map(
                   (social, index) => (
                     <div
                       key={index}
                       className="w-10 h-10 bg-black rounded-full flex items-center justify-center hover:bg-gray-800 transition-colors cursor-pointer"
                     >
-                      <span className="text-white text-xs font-bold">
-                        {social[0]}
+                      <span className="text-white text-xl font-bold">
+                        {social}
                       </span>
                     </div>
                   )
@@ -422,78 +419,30 @@ const HomePage = () => {
             <div>
               <h4 className="font-semibold mb-6 text-black">COMPANY</h4>
               <ul className="space-y-3 text-gray-600">
-                <li>
-                  <a href="#" className="hover:text-black transition-colors">
-                    About
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-black transition-colors">
-                    Features
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-black transition-colors">
-                    Works
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-black transition-colors">
-                    Career
-                  </a>
-                </li>
+                <li><a href="#" className="hover:text-black transition-colors">About</a></li>
+                <li><a href="#" className="hover:text-black transition-colors">Features</a></li>
+                <li><a href="#" className="hover:text-black transition-colors">Works</a></li>
+                <li><a href="#" className="hover:text-black transition-colors">Career</a></li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-semibold mb-6 text-black">HELP</h4>
               <ul className="space-y-3 text-gray-600">
-                <li>
-                  <a href="#" className="hover:text-black transition-colors">
-                    Customer Support
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-black transition-colors">
-                    Delivery Details
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-black transition-colors">
-                    Terms & Conditions
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-black transition-colors">
-                    Privacy Policy
-                  </a>
-                </li>
+                <li><a href="#" className="hover:text-black transition-colors">Customer Support</a></li>
+                <li><a href="#" className="hover:text-black transition-colors">Delivery Details</a></li>
+                <li><a href="#" className="hover:text-black transition-colors">Terms & Conditions</a></li>
+                <li><a href="#" className="hover:text-black transition-colors">Privacy Policy</a></li>
               </ul>
             </div>
 
             <div>
               <h4 className="font-semibold mb-6 text-black">RESOURCES</h4>
               <ul className="space-y-3 text-gray-600">
-                <li>
-                  <a href="#" className="hover:text-black transition-colors">
-                    Free eBooks
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-black transition-colors">
-                    Development Tutorial
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-black transition-colors">
-                    How to - Blog
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-black transition-colors">
-                    Youtube Playlist
-                  </a>
-                </li>
+                <li><a href="#" className="hover:text-black transition-colors">Free eBooks</a></li>
+                <li><a href="#" className="hover:text-black transition-colors">Development Tutorial</a></li>
+                <li><a href="#" className="hover:text-black transition-colors">How to - Blog</a></li>
+                <li><a href="#" className="hover:text-black transition-colors">Youtube Playlist</a></li>
               </ul>
             </div>
           </div>
@@ -504,13 +453,7 @@ const HomePage = () => {
                 Shop.co © 2000-2023, All Rights Reserved
               </p>
               <div className="flex items-center space-x-4 mt-4 md:mt-0">
-                {[
-                  "Visa",
-                  "Mastercard",
-                  "PayPal",
-                  "Apple Pay",
-                  "Google Pay",
-                ].map((payment) => (
+                {["Visa", "Mastercard", "PayPal", "Apple Pay", "Google Pay"].map((payment) => (
                   <div
                     key={payment}
                     className="w-12 h-8 bg-white border border-gray-300 rounded flex items-center justify-center"
