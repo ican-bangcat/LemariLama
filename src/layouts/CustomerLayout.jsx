@@ -18,7 +18,7 @@ const CustomerLayout = () => {
         {/* Di sinilah semua konten halaman (HomePage, Dashboard, dll) akan muncul */}
         <Outlet />
       </main>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 };

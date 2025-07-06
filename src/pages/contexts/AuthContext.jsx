@@ -104,6 +104,31 @@ export function AuthProvider({ children }) {
     };
   }, []); // Dependency array kosong
 
+  // Function untuk logout
+  const logout = async () => {
+    try {
+      console.log("🔄 Logging out...");
+      
+      // Logout dari Supabase
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error("❌ Logout error:", error);
+        throw error;
+      }
+      
+      // Clear state (biasanya onAuthStateChange akan handle ini, tapi untuk memastikan)
+      setUser(null);
+      setProfile(null);
+      
+      console.log("✅ Logout successful");
+      
+    } catch (error) {
+      console.error("❌ Logout failed:", error);
+      throw error;
+    }
+  };
+
   // Debug log yang lebih simple
   console.log('AuthContext state:', { 
     user: !!user, 
@@ -114,7 +139,8 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     profile,
-    loading
+    loading,
+    logout  // Tambahkan logout function ke context value
   };
 
   if (loading) {

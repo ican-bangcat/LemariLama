@@ -22,7 +22,7 @@ const Login = () => {
   useEffect(() => {
     if (user) {
       console.log("🔄 User logged in, redirecting to dashboard");
-      navigate('/dashboard', { replace: true });
+      navigate('/', { replace: true });
     }
   }, [user, navigate]);
 
