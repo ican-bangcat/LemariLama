@@ -8,7 +8,7 @@ const Register = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phoneNumber: "",
+    phone: "",
     password: "",
     confirmPassword: "",
   });
@@ -37,20 +37,35 @@ const Register = () => {
       return;
     }
 
+    // Validate phone number
+    if (!formData.phone.trim()) {
+      setError("Phone number is required.");
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      await signUpUser(formData.email, formData.password, formData.name);
+      console.log('📋 Form data being sent:', {
+        email: formData.email,
+        name: formData.name,
+        phone: formData.phone,
+        passwordLength: formData.password.length
+      });
       
-      // Catatan penting: 
-      // Saat ini, 'phoneNumber' belum tersimpan karena trigger kita hanya menyimpan 'name' dan 'role'.
-      // Anda perlu menambahkan fungsi update profil di halaman profil pengguna nanti
-      // untuk menyimpan nomor telepon dan data lainnya.
+      // Pass phone number to signUpUser function
+      await signUpUser(
+        formData.email, 
+        formData.password, 
+        formData.name, 
+        formData.phone
+      );
 
       alert("Registration successful! Please check your email for verification.");
       navigate("/login");
     } catch (err) {
+      console.error('❌ Registration error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -65,7 +80,7 @@ const Register = () => {
 
   return (
     <AuthLayout>
-      <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 max-w-md w-full">
+      <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 max-w-2xl w-full">
         <div className="flex items-center justify-center mb-8">
           <img
             src="/images/logo.png"
@@ -110,7 +125,7 @@ const Register = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label
                 htmlFor="email"
@@ -131,16 +146,16 @@ const Register = () => {
             </div>
             <div>
               <label
-                htmlFor="phoneNumber"
+                htmlFor="phone"
                 className="block text-sm font-semibold text-gray-700 mb-2"
               >
                 Phone Number
               </label>
               <input
                 type="tel"
-                id="phoneNumber"
-                name="phoneNumber"
-                value={formData.phoneNumber}
+                id="phone"
+                name="phone"
+                value={formData.phone}
                 onChange={handleInputChange}
                 placeholder="+62 812 3456 7890"
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white"
@@ -149,59 +164,61 @@ const Register = () => {
             </div>
           </div>
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-semibold text-gray-700 mb-2"
-            >
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleInputChange}
-                placeholder="Create a strong password"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white pr-12"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label
+                htmlFor="password"
+                className="block text-sm font-semibold text-gray-700 mb-2"
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
+                Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  placeholder="Create a strong password"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white pr-12"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
-          </div>
 
-          <div>
-            <label
-              htmlFor="confirmPassword"
-              className="block text-sm font-semibold text-gray-700 mb-2"
-            >
-              Confirm Password
-            </label>
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? "text" : "password"}
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                placeholder="Confirm your password"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white pr-12"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            <div>
+              <label
+                htmlFor="confirmPassword"
+                className="block text-sm font-semibold text-gray-700 mb-2"
               >
-                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
+                Confirm Password
+              </label>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  placeholder="Confirm your password"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 bg-gray-50 focus:bg-white pr-12"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
             </div>
           </div>
 
