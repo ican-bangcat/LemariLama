@@ -107,7 +107,7 @@ const ProductFormModal = ({ onClose, onSave, productToEdit }) => {
         // Latar belakang blur dan sedikit transparan
         <div className="fixed inset-0  bg-opacity-30 backdrop-blur-sm flex justify-center items-center z-50">
             {/* Animasi pop-up pada div modal utama */}
-            <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out scale-95 opacity- animate-modal-open">
+            <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-out scale-95 opacity-100 animate-modal-open">
                 <h2 className="text-2xl font-bold mb-6">{isEditMode ? 'Edit Produk' : 'Tambah Produk Baru'}</h2>
                 <form onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -153,21 +153,22 @@ const ProductFormModal = ({ onClose, onSave, productToEdit }) => {
 
                         {/* Kondisi */}
                         <div>
-                            <label htmlFor="condition" className="block text-sm font-medium text-gray-700">Kondisi Barang</label>
+                            <label htmlFor="condition" className="block text-sm font-medium text-gray-700">Kondisi</label>
                             <select
                                 name="condition"
-                                id="condition"
                                 value={formData.condition}
                                 onChange={handleChange}
                                 className="mt-1 w-full border-gray-300 rounded-md shadow-sm"
+                                required
                             >
-                                <option value="">-- Pilih Kondisi Barang --</option>
+                                <option value="">-- Pilih Kondisi --</option>
                                 <option value="100%">100%</option>
                                 <option value="90%">90%</option>
                                 <option value="75%">75%</option>
                                 <option value="50%">50%</option>
                             </select>
                         </div>
+
 
 
                         {/* Ukuran */}
