@@ -1,5 +1,6 @@
+// AdminProduct.jsx (Modifikasi)
 import { useState, useEffect, useMemo } from "react";
-import { Plus, Edit, Trash2, MoreVertical } from "lucide-react";
+import { Plus, Edit, Trash2 } from "lucide-react";
 
 // Import komponen UI Admin
 import Sidebar from "../components/Sidebar";
@@ -8,7 +9,7 @@ import Footer from "../components/Footer";
 import ProductFormModal from "../components/ProductFormModal";
 
 // Import fungsi dari service
-import { getProducts, addProduct, deleteProduct } from "../pages/services/product";
+import { getProducts, addProduct, updateProduct, deleteProduct } from "../pages/services/product";
 import { useAuth } from "../pages/contexts/AuthContext";
 
 const AdminProduct = () => {
@@ -18,6 +19,9 @@ const AdminProduct = () => {
     const [showModal, setShowModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedProducts, setSelectedProducts] = useState(new Set());
+    
+    // State baru untuk menangani produk yang sedang diedit
+    const [productToEdit, setProductToEdit] = useState(null);
 
     const { user } = useAuth();
 
@@ -36,46 +40,50 @@ const AdminProduct = () => {
         };
         fetchProducts();
     }, []);
+    
 
-    // Fungsi untuk menambah produk
-    const handleAdd = async (newProductData) => {
-        try {
-            const productWithOwner = { ...newProductData, admin_id: user.id };
+    // Fungsi untuk menangani simpan (Tambah & Update)
+    const handleSaveProduct = async (formData, productId) => {
+        // Jika ada productId, berarti mode Update
+        if (productId) {
+            const updatedProduct = await updateProduct(productId, formData);
+            setProducts(products.map(p => (p.id === productId ? updatedProduct : p)));
+        } else { // Jika tidak, mode Tambah
+            const productWithOwner = { ...formData, admin_id: user.id };
             const addedProduct = await addProduct(productWithOwner);
-            if (addedProduct) {
-                // Refresh data untuk mendapatkan nama kategori
-                const updatedProducts = await getProducts();
-                setProducts(updatedProducts);
-            }
-            setShowModal(false);
-        } catch (err) {
-            console.error("Failed to add product:", err);
+            setProducts([addedProduct, ...products]);
         }
     };
+    
+    // Fungsi untuk membuka modal dalam mode "Tambah"
+    const handleAddClick = () => {
+        setProductToEdit(null);
+        setShowModal(true);
+    };
 
-    // Fungsi untuk menghapus produk
+    // Fungsi untuk membuka modal dalam mode "Edit"
+    const handleEditClick = (product) => {
+        setProductToEdit(product);
+        setShowModal(true);
+    };
+
+    // Fungsi untuk menghapus produk dengan konfirmasi
     const handleDelete = async (productId) => {
-        // PENTING: Di aplikasi nyata, tambahkan modal konfirmasi di sini!
-        // if (!window.confirm("Apakah Anda yakin ingin menghapus produk ini?")) return;
-        
-        try {
-            const success = await deleteProduct(productId);
-            if (success) {
+        if (window.confirm("Apakah Anda yakin ingin menghapus produk ini? Tindakan ini tidak dapat dibatalkan.")) {
+            try {
+                await deleteProduct(productId);
                 setProducts(products.filter(p => p.id !== productId));
+            } catch (err) {
+                console.error("Failed to delete product:", err);
+                alert("Gagal menghapus produk.");
             }
-        } catch (err) {
-            console.error("Failed to delete product:", err);
         }
     };
 
     // Logika untuk checkbox
     const handleSelectProduct = (productId) => {
         const newSelection = new Set(selectedProducts);
-        if (newSelection.has(productId)) {
-            newSelection.delete(productId);
-        } else {
-            newSelection.add(productId);
-        }
+        newSelection.has(productId) ? newSelection.delete(productId) : newSelection.add(productId);
         setSelectedProducts(newSelection);
     };
 
@@ -87,9 +95,9 @@ const AdminProduct = () => {
         }
     };
 
-    // Logika filter produk
-    const filteredProducts = useMemo(() => 
-        products.filter(p => 
+    // Logika filter produk (tidak berubah)
+    const filteredProducts = useMemo(() =>
+        products.filter(p =>
             p.name.toLowerCase().includes(searchTerm.toLowerCase())
         ), [products, searchTerm]
     );
@@ -100,14 +108,13 @@ const AdminProduct = () => {
             <div className="flex-1 flex flex-col">
                 <Topbar />
                 <main className="flex-1 p-6 overflow-y-auto">
-                    {/* Header Halaman */}
                     <div className="flex justify-between items-center mb-6">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-800">Manajemen Produk</h1>
                             <p className="text-gray-500 mt-1">Kelola semua produk Anda di sini.</p>
                         </div>
                         <button
-                            onClick={() => setShowModal(true)}
+                            onClick={handleAddClick}
                             className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
                         >
                             <Plus size={18} />
@@ -115,7 +122,6 @@ const AdminProduct = () => {
                         </button>
                     </div>
 
-                    {/* Kontrol Tabel */}
                     <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
                         <input
                             type="text"
@@ -126,7 +132,6 @@ const AdminProduct = () => {
                         />
                     </div>
 
-                    {/* Tabel Produk */}
                     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                         <table className="w-full text-left">
                             <thead className="bg-gray-50 border-b border-gray-200">
@@ -155,14 +160,14 @@ const AdminProduct = () => {
                                         <td className="p-4">{product.stock}</td>
                                         <td className="p-4">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(product.price)}</td>
                                         <td className="p-4">
-                                            <span className={`px-2 py-1 text-xs rounded-full ${product.is_sold ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                                                {product.is_sold ? 'Terjual' : 'Tersedia'}
+                                            <span className={`px-2 py-1 text-xs rounded-full ${product.stock === 0 || product.is_sold ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                                                {product.stock === 0 || product.is_sold ? 'Habis/Terjual' : 'Tersedia'}
                                             </span>
                                         </td>
                                         <td className="p-4">{product.categories?.name || 'N/A'}</td>
                                         <td className="p-4">
                                             <div className="flex gap-2">
-                                                <button className="p-2 hover:bg-gray-200 rounded-full"><Edit size={16} /></button>
+                                                <button onClick={() => handleEditClick(product)} className="p-2 hover:bg-gray-200 rounded-full"><Edit size={16} /></button>
                                                 <button onClick={() => handleDelete(product.id)} className="p-2 hover:bg-red-100 rounded-full text-red-600"><Trash2 size={16} /></button>
                                             </div>
                                         </td>
@@ -173,7 +178,11 @@ const AdminProduct = () => {
                     </div>
                 </main>
                 <Footer />
-                {showModal && <ProductFormModal onClose={() => setShowModal(false)} onAdd={handleAdd} />}
+                {showModal && <ProductFormModal 
+                    onClose={() => setShowModal(false)} 
+                    onSave={handleSaveProduct} 
+                    productToEdit={productToEdit} 
+                />}
             </div>
         </div>
     );
