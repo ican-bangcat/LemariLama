@@ -1,4 +1,3 @@
-// AdminProduct.jsx (Modifikasi)
 import { useState, useEffect, useMemo } from "react";
 import { Plus, Edit, Trash2 } from "lucide-react";
 
@@ -8,8 +7,8 @@ import Topbar from "../components/Topbar";
 import Footer from "../components/Footer";
 import ProductFormModal from "../components/ProductFormModal";
 
-// Import fungsi dari service
-import { getProducts, addProduct, updateProduct, deleteProduct } from "../pages/services/product";
+// Import fungsi dari service, termasuk uploadImage
+import { getProducts, addProduct, updateProduct, deleteProduct, uploadImage } from "../pages/services/product";
 import { useAuth } from "../pages/contexts/AuthContext";
 
 const AdminProduct = () => {
@@ -18,86 +17,56 @@ const AdminProduct = () => {
     const [error, setError] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedProducts, setSelectedProducts] = useState(new Set());
-    
-    // State baru untuk menangani produk yang sedang diedit
     const [productToEdit, setProductToEdit] = useState(null);
 
     const { user } = useAuth();
 
-    // Mengambil data saat komponen dimuat
+    // Mengambil data awal
+    const fetchProducts = async () => {
+        try {
+            setLoading(true);
+            const data = await getProducts();
+            setProducts(data || []);
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                setLoading(true);
-                const data = await getProducts();
-                setProducts(data || []);
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchProducts();
     }, []);
     
-
-    // Fungsi untuk menangani simpan (Tambah & Update)
-    const handleSaveProduct = async (formData, productId) => {
-        // Jika ada productId, berarti mode Update
-        if (productId) {
-            const updatedProduct = await updateProduct(productId, formData);
-            setProducts(products.map(p => (p.id === productId ? updatedProduct : p)));
-        } else { // Jika tidak, mode Tambah
-            const productWithOwner = { ...formData, admin_id: user.id };
-            const addedProduct = await addProduct(productWithOwner);
-            setProducts([addedProduct, ...products]);
-        }
+    // Fungsi untuk menangani simpan produk dari modal
+    const handleSaveProduct = async (savedProduct) => {
+        // Refresh data di tabel untuk menampilkan perubahan
+        fetchProducts();
     };
     
-    // Fungsi untuk membuka modal dalam mode "Tambah"
     const handleAddClick = () => {
         setProductToEdit(null);
         setShowModal(true);
     };
 
-    // Fungsi untuk membuka modal dalam mode "Edit"
     const handleEditClick = (product) => {
         setProductToEdit(product);
         setShowModal(true);
     };
 
-    // Fungsi untuk menghapus produk dengan konfirmasi
     const handleDelete = async (productId) => {
-        if (window.confirm("Apakah Anda yakin ingin menghapus produk ini? Tindakan ini tidak dapat dibatalkan.")) {
+        if (window.confirm("Apakah Anda yakin ingin menghapus produk ini?")) {
             try {
                 await deleteProduct(productId);
                 setProducts(products.filter(p => p.id !== productId));
             } catch (err) {
-                console.error("Failed to delete product:", err);
                 alert("Gagal menghapus produk.");
             }
         }
     };
 
-    // Logika untuk checkbox
-    const handleSelectProduct = (productId) => {
-        const newSelection = new Set(selectedProducts);
-        newSelection.has(productId) ? newSelection.delete(productId) : newSelection.add(productId);
-        setSelectedProducts(newSelection);
-    };
-
-    const handleSelectAll = (e) => {
-        if (e.target.checked) {
-            setSelectedProducts(new Set(filteredProducts.map(p => p.id)));
-        } else {
-            setSelectedProducts(new Set());
-        }
-    };
-
-    // Logika filter produk (tidak berubah)
-    const filteredProducts = useMemo(() =>
-        products.filter(p =>
+    const filteredProducts = useMemo(() => 
+        products.filter(p => 
             p.name.toLowerCase().includes(searchTerm.toLowerCase())
         ), [products, searchTerm]
     );
@@ -113,30 +82,20 @@ const AdminProduct = () => {
                             <h1 className="text-3xl font-bold text-gray-800">Manajemen Produk</h1>
                             <p className="text-gray-500 mt-1">Kelola semua produk Anda di sini.</p>
                         </div>
-                        <button
-                            onClick={handleAddClick}
-                            className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors"
-                        >
+                        <button onClick={handleAddClick} className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors">
                             <Plus size={18} />
                             Tambah Produk
                         </button>
                     </div>
 
                     <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-                        <input
-                            type="text"
-                            placeholder="Cari berdasarkan nama produk..."
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+                        <input type="text" placeholder="Cari berdasarkan nama produk..." className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                     </div>
 
                     <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                         <table className="w-full text-left">
                             <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
-                                    <th className="p-4 w-12"><input type="checkbox" onChange={handleSelectAll} checked={selectedProducts.size === filteredProducts.length && filteredProducts.length > 0} /></th>
                                     <th className="p-4">Produk</th>
                                     <th className="p-4">Stok</th>
                                     <th className="p-4">Harga</th>
@@ -146,11 +105,10 @@ const AdminProduct = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {loading && <tr><td colSpan="7" className="text-center p-8">Loading...</td></tr>}
-                                {error && <tr><td colSpan="7" className="text-center p-8 text-red-500">Error: {error}</td></tr>}
+                                {loading && <tr><td colSpan="6" className="text-center p-8">Loading...</td></tr>}
+                                {error && <tr><td colSpan="6" className="text-center p-8 text-red-500">Error: {error}</td></tr>}
                                 {!loading && !error && filteredProducts.map(product => (
                                     <tr key={product.id} className="border-b border-gray-200 hover:bg-gray-50">
-                                        <td className="p-4"><input type="checkbox" checked={selectedProducts.has(product.id)} onChange={() => handleSelectProduct(product.id)} /></td>
                                         <td className="p-4">
                                             <div className="flex items-center gap-4">
                                                 <img src={product.images?.[0] || 'https://placehold.co/40x40/E2E8F0/4A5568?text=N/A'} alt={product.name} className="w-10 h-10 rounded-md object-cover" />
@@ -160,8 +118,8 @@ const AdminProduct = () => {
                                         <td className="p-4">{product.stock}</td>
                                         <td className="p-4">{new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(product.price)}</td>
                                         <td className="p-4">
-                                            <span className={`px-2 py-1 text-xs rounded-full ${product.stock === 0 || product.is_sold ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                                                {product.stock === 0 || product.is_sold ? 'Habis/Terjual' : 'Tersedia'}
+                                            <span className={`px-2 py-1 text-xs rounded-full ${product.is_sold ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                                                {product.is_sold ? 'Terjual' : 'Tersedia'}
                                             </span>
                                         </td>
                                         <td className="p-4">{product.categories?.name || 'N/A'}</td>
