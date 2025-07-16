@@ -5,12 +5,17 @@ import Footer from "../components/Footer";
 
 const AdminHome = () => {
     return (
-        <div className="flex min-h-screen">
-            <Sidebar />
-            <div className="flex-1 flex flex-col bg-gray-100">
+        <div className="flex bg-gray-100 min-h-screen">
+            {/* Sidebar tetap (sticky) */}
+            <div className="w-60 h-screen sticky top-0">
+                <Sidebar />
+            </div>
+
+            {/* Konten utama scrollable */}
+            <div className="flex-1 flex flex-col max-h-screen overflow-y-auto">
                 <Topbar />
 
-                <div className="p-6 space-y-6">
+                <main className="flex-1 overflow-y-auto p-6 space-y-6">
                     <h1 className="text-2xl font-bold">Dashboard LemariLama</h1>
                     <p className="text-sm text-gray-500 mb-4">
                         Selamat datang! Pantau aktivitas harian toko Anda di sini.
@@ -24,16 +29,16 @@ const AdminHome = () => {
                         <Card title="Pembelian Produk Hari Ini" value="0" icon="🛒" />
                     </div>
 
-                    {/* Grafik Penjualan & Perkembangan Pelanggan */}
+                    {/* Grafik */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                         <GraphCard title="Grafik Penjualan Produk">
-                            <img src="/images/penjualan.png" alt="Grafik Penjualan" />
+                            <img src="/images/penjualan.png" alt="Grafik Penjualan" className="w-full h-full object-contain" />
                         </GraphCard>
                         <GraphCard title="Perkembangan Jumlah Pelanggan">
-                            <img src="/images/pelanggan.png" alt="Grafik Pelanggan" />
+                            <img src="/images/pelanggan.png" alt="Grafik Pelanggan" className="w-full h-full object-contain" />
                         </GraphCard>
                     </div>
-                </div>
+                </main>
 
                 <Footer />
             </div>
