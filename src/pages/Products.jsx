@@ -1,17 +1,26 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, Filter, X, Grid, List, Star, Heart, ShoppingCart, Eye } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Search, Filter, X, Grid, List, Star, Heart, ShoppingCart, Eye, Loader2, Check } from 'lucide-react';
 
 // Import fungsi dari service Anda
 import { getAllProducts, getAllCategories } from '../pages/services/CustomerProduct';
 // Import image utility yang sudah kita perbaiki
 import { getProductMainImage } from '../utils/imageUtils';
+// Import context
+import { useCart } from '../pages/contexts/CartContext';
+import { useAuth } from '../pages/contexts/AuthContext';
 
 // --- Komponen ProductCard yang dipercantik ---
 const ProductCard = ({ product, viewMode = 'grid' }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
+  const { addToCart } = useCart();
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [addToCartSuccess, setAddToCartSuccess] = useState(false);
+  
   const mainImage = getProductMainImage(product.images);
   
   const formatPrice = (price) => {
@@ -34,12 +43,42 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
 
   const handleQuickView = (e) => {
     e.stopPropagation(); // Prevent card click
-    console.log('Quick view for product:', product.id);
+    navigate(`/product/${product.id}`);
   };
 
-  const handleQuickAdd = (e) => {
+  const handleQuickAdd = async (e) => {
     e.stopPropagation(); // Prevent card click
-    console.log('Quick add to cart:', product.id);
+    
+    if (!user) {
+      navigate('/login', { 
+        state: { 
+          from: location.pathname,
+          message: 'Please login to add items to your cart' 
+        }
+      });
+      return;
+    }
+
+    if (product.is_sold || product.stock <= 0) {
+      alert('This product is not available');
+      return;
+    }
+
+    setAddingToCart(true);
+    try {
+      await addToCart(product.id, 1, product.size);
+      setAddToCartSuccess(true);
+      
+      // Reset success state setelah 2 detik
+      setTimeout(() => {
+        setAddToCartSuccess(false);
+      }, 2000);
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert(error.message || 'Failed to add item to cart');
+    } finally {
+      setAddingToCart(false);
+    }
   };
 
   if (viewMode === 'list') {
@@ -64,6 +103,9 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
             )}
             {product.is_sold && (
               <span className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 text-xs font-medium rounded-full">SOLD</span>
+            )}
+            {product.stock <= 0 && !product.is_sold && (
+              <span className="absolute top-2 right-2 bg-orange-500 text-white px-2 py-1 text-xs font-medium rounded-full">OUT OF STOCK</span>
             )}
           </div>
           
@@ -105,10 +147,25 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
                 </button>
                 <button 
                   onClick={handleQuickAdd}
-                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center space-x-2"
+                  disabled={product.is_sold || product.stock <= 0 || addingToCart}
+                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <ShoppingCart className="w-4 h-4" />
-                  <span>Add to Cart</span>
+                  {addingToCart ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Adding...</span>
+                    </>
+                  ) : addToCartSuccess ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Added!</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="w-4 h-4" />
+                      <span>Add to Cart</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>
@@ -147,6 +204,9 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
           {product.is_sold && (
             <span className="bg-red-500 text-white px-3 py-1 text-xs font-medium rounded-full shadow-lg">SOLD</span>
           )}
+          {product.stock <= 0 && !product.is_sold && (
+            <span className="bg-orange-500 text-white px-3 py-1 text-xs font-medium rounded-full shadow-lg">OUT OF STOCK</span>
+          )}
         </div>
         
         {/* Action buttons */}
@@ -169,10 +229,25 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
         <div className={`absolute bottom-4 left-4 right-4 transition-all duration-300 ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <button 
             onClick={handleQuickAdd}
-            className="w-full bg-white text-black py-2 px-4 rounded-lg font-medium hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2 shadow-lg"
+            disabled={product.is_sold || product.stock <= 0 || addingToCart}
+            className="w-full bg-white text-black py-2 px-4 rounded-lg font-medium hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <ShoppingCart className="w-4 h-4" />
-            <span>Quick Add</span>
+            {addingToCart ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Adding...</span>
+              </>
+            ) : addToCartSuccess ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span>Added!</span>
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="w-4 h-4" />
+                <span>Quick Add</span>
+              </>
+            )}
           </button>
         </div>
       </div>

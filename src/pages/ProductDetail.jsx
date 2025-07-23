@@ -16,16 +16,21 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  ZoomIn
+  ZoomIn,
+  Loader2
 } from 'lucide-react';
 
-// Import services yang sudah ada
+// Import services dan context
 import { getProductById } from '../pages/services/CustomerProduct';
 import { getProductMainImage } from '../utils/imageUtils';
+import { useCart } from '../pages/contexts/CartContext';
+import { useAuth } from '../pages/contexts/AuthContext';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { addToCart, cartCount } = useCart();
   
   // States
   const [product, setProduct] = useState(null);
@@ -37,6 +42,8 @@ const ProductDetail = () => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [activeTab, setActiveTab] = useState('description');
+  const [addingToCart, setAddingToCart] = useState(false);
+  const [addToCartSuccess, setAddToCartSuccess] = useState(false);
 
   // Load product data
   useEffect(() => {
@@ -81,14 +88,52 @@ const ProductDetail = () => {
     }
   };
 
-  const handleAddToCart = () => {
-    // Implementasi add to cart
-    console.log('Adding to cart:', {
-      productId: product.id,
-      quantity,
-      selectedSize
-    });
-    // Anda bisa menambahkan logika cart di sini
+  const handleAddToCart = async () => {
+    if (!user) {
+      // Redirect ke login jika belum login
+      navigate('/login', { 
+        state: { 
+          from: location.pathname,
+          message: 'Please login to add items to your cart' 
+        }
+      });
+      return;
+    }
+
+    if (!product || product.is_sold || product.stock <= 0) {
+      alert('This product is not available');
+      return;
+    }
+
+    setAddingToCart(true);
+    try {
+      await addToCart(
+        product.id, 
+        quantity, 
+        selectedSize || product.size, 
+        null // notes bisa ditambah jika diperlukan
+      );
+      
+      setAddToCartSuccess(true);
+      
+      // Reset success state setelah 2 detik
+      setTimeout(() => {
+        setAddToCartSuccess(false);
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      alert(error.message || 'Failed to add item to cart');
+    } finally {
+      setAddingToCart(false);
+    }
+  };
+
+  const handleBuyNow = async () => {
+    await handleAddToCart();
+    if (user) {
+      navigate('/cart');
+    }
   };
 
   const handleShare = async () => {
@@ -335,16 +380,43 @@ const ProductDetail = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <button
                   onClick={handleAddToCart}
-                  disabled={product.is_sold || product.stock <= 0}
-                  className="flex items-center justify-center space-x-2 bg-black text-white py-3 px-6 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                  disabled={product.is_sold || product.stock <= 0 || addingToCart}
+                  className="flex items-center justify-center space-x-2 bg-black text-white py-3 px-6 rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium relative"
                 >
-                  <ShoppingCart className="w-5 h-5" />
-                  <span>Add to Cart</span>
+                  {addingToCart ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Adding...</span>
+                    </>
+                  ) : addToCartSuccess ? (
+                    <>
+                      <Check className="w-5 h-5" />
+                      <span>Added!</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="w-5 h-5" />
+                      <span>Add to Cart</span>
+                    </>
+                  )}
                 </button>
-                <button className="border border-black text-black py-3 px-6 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                <button 
+                  onClick={handleBuyNow}
+                  disabled={product.is_sold || product.stock <= 0 || addingToCart}
+                  className="border border-black text-black py-3 px-6 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                >
                   Buy Now
                 </button>
               </div>
+
+              {/* Login prompt untuk user yang belum login */}
+              {!user && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-blue-800 text-sm">
+                    <strong>Please login</strong> to add items to your cart and make purchases.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Features */}

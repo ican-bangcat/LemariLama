@@ -1,6 +1,7 @@
 import React from "react";
 import { Routes, Route, BrowserRouter, Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "./pages/contexts/AuthContext"; // Sesuaikan path jika perlu
+import { CartProvider } from "./pages/contexts/CartContext"; // Import CartProvider
 
 // Layouts
 import CustomerLayout from "./layouts/CustomerLayout";
@@ -79,43 +80,46 @@ const GuestRoute = () => {
 function App() {
   return (
     <BrowserRouter>
-      <React.Suspense fallback={<SuspenseLoader />}>
-        <Routes>
-          {/* RUTE PUBLIK - bisa diakses siapa saja */}
-          <Route element={<CustomerLayout />}>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/products" element={<Products />} />
-            <Route path="/product/:id" element={<ProductDetail />} /> {/* Route baru untuk detail produk */}
-          </Route>
-
-          {/* RUTE TAMU - hanya untuk yang belum login */}
-          <Route element={<GuestRoute />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-          </Route>
-
-          {/* RUTE CUSTOMER - hanya untuk customer yang sudah login */}
-          <Route element={<ProtectedRoute requiredRole="customer" />}>
+      <CartProvider> {/* Wrap dengan CartProvider */}
+        <React.Suspense fallback={<SuspenseLoader />}>
+          <Routes>
+            {/* RUTE PUBLIK - bisa diakses siapa saja */}
             <Route element={<CustomerLayout />}>
-              <Route path="/cart" element={<Cart />} />
-              {/* Tambahkan rute customer lain di sini */}
+              <Route path="/" element={<HomePage />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/product/:id" element={<ProductDetail />} /> {/* Route baru untuk detail produk */}
             </Route>
-          </Route>
 
-          {/* RUTE ADMIN - hanya untuk admin yang sudah login */}
-          <Route element={<ProtectedRoute requiredRole="admin" />}>
-            {/* Anda bisa menambahkan <AdminLayout> di sini jika perlu */}
-            <Route path="/admin/dashboard" element={<AdminHome />} />
-            <Route path="/admin/product" element={<AdminProduct />} />
-            <Route path="/admin/customer" element={<CustomerPage />} />
-            <Route path="/admin/order" element={<OrderDashboard />} />
-            <Route path="/admin/history" element={<HistoryPage />} />
-          </Route>
+            {/* RUTE TAMU - hanya untuk yang belum login */}
+            <Route element={<GuestRoute />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+            </Route>
 
-          {/* Fallback jika halaman tidak ditemukan */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </React.Suspense>
+            {/* RUTE CUSTOMER - hanya untuk customer yang sudah login */}
+            <Route element={<ProtectedRoute requiredRole="customer" />}>
+              <Route element={<CustomerLayout />}>
+                <Route path="/cart" element={<Cart />} />
+                <Route path="/dashboard" element={<CustomerDashboard />} />
+                {/* Tambahkan rute customer lain di sini */}
+              </Route>
+            </Route>
+
+            {/* RUTE ADMIN - hanya untuk admin yang sudah login */}
+            <Route element={<ProtectedRoute requiredRole="admin" />}>
+              {/* Anda bisa menambahkan <AdminLayout> di sini jika perlu */}
+              <Route path="/admin/dashboard" element={<AdminHome />} />
+              <Route path="/admin/product" element={<AdminProduct />} />
+              <Route path="/admin/customer" element={<CustomerPage />} />
+              <Route path="/admin/order" element={<OrderDashboard />} />
+              <Route path="/admin/history" element={<HistoryPage />} />
+            </Route>
+
+            {/* Fallback jika halaman tidak ditemukan */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </React.Suspense>
+      </CartProvider>
     </BrowserRouter>
   );
 }
