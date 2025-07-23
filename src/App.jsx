@@ -28,7 +28,7 @@ const AdminHome = React.lazy(() => import("./pages/AdminHome"));
 const AdminProduct = React.lazy(() => import("./pages/AdminProduct"));
 const AdminTestimonial = React.lazy(() => import("./pages/AdminTestimonial"));
 const CustomerPage = React.lazy(() => import("./pages/CustomerPage"));
-const OrderDashboard = React.lazy(() => import("./pages/OrderDashboard"));
+const AdminOrders = React.lazy(() => import("./pages/AdminOrders.jsx"));
 const HistoryPage = React.lazy(() => import("./pages/HistoryPage"));
 
 // Halaman Auth
@@ -135,7 +135,7 @@ function App() {
                 element={<AdminTestimonial />}
               />
               <Route path="/admin/customer" element={<CustomerPage />} />
-              <Route path="/admin/order" element={<OrderDashboard />} />
+              <Route path="/admin/order" element={<AdminOrders />} />
               <Route path="/admin/history" element={<HistoryPage />} />
             </Route>
 
