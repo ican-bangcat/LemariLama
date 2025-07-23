@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Filter, X, Grid, List, Star, Heart, ShoppingCart, Eye } from 'lucide-react';
 
 // Import fungsi dari service Anda
@@ -8,6 +9,7 @@ import { getProductMainImage } from '../utils/imageUtils';
 
 // --- Komponen ProductCard yang dipercantik ---
 const ProductCard = ({ product, viewMode = 'grid' }) => {
+  const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const mainImage = getProductMainImage(product.images);
@@ -20,9 +22,32 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
     }).format(price || 0);
   };
 
+  const handleCardClick = () => {
+    navigate(`/product/${product.id}`);
+  };
+
+  const handleFavoriteClick = (e) => {
+    e.stopPropagation(); // Prevent card click
+    setIsFavorited(!isFavorited);
+    // Add your favorite logic here
+  };
+
+  const handleQuickView = (e) => {
+    e.stopPropagation(); // Prevent card click
+    console.log('Quick view for product:', product.id);
+  };
+
+  const handleQuickAdd = (e) => {
+    e.stopPropagation(); // Prevent card click
+    console.log('Quick add to cart:', product.id);
+  };
+
   if (viewMode === 'list') {
     return (
-      <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100">
+      <div 
+        className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 cursor-pointer"
+        onClick={handleCardClick}
+      >
         <div className="flex p-4">
           <div className="w-32 h-32 relative rounded-lg overflow-hidden flex-shrink-0">
             <img
@@ -66,13 +91,22 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
               </div>
               
               <div className="flex items-center space-x-2">
-                <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
-                  <Heart className="w-5 h-5 text-gray-400 hover:text-red-500" />
+                <button 
+                  onClick={handleFavoriteClick}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <Heart className={`w-5 h-5 ${isFavorited ? 'text-red-500 fill-current' : 'text-gray-400 hover:text-red-500'}`} />
                 </button>
-                <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+                <button 
+                  onClick={handleQuickView}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
                   <Eye className="w-5 h-5 text-gray-400 hover:text-blue-500" />
                 </button>
-                <button className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center space-x-2">
+                <button 
+                  onClick={handleQuickAdd}
+                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center space-x-2"
+                >
                   <ShoppingCart className="w-4 h-4" />
                   <span>Add to Cart</span>
                 </button>
@@ -89,6 +123,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
       className="group cursor-pointer"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={handleCardClick}
     >
       <div className="relative overflow-hidden rounded-xl bg-gray-100 aspect-[4/5] mb-4 shadow-sm hover:shadow-lg transition-all duration-300">
         <img
@@ -117,19 +152,25 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
         {/* Action buttons */}
         <div className={`absolute top-3 right-3 flex flex-col space-y-2 transition-all duration-300 ${isHovered ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
           <button 
-            onClick={() => setIsFavorited(!isFavorited)}
+            onClick={handleFavoriteClick}
             className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all duration-200"
           >
             <Heart className={`w-4 h-4 ${isFavorited ? 'text-red-500 fill-current' : 'text-gray-600'}`} />
           </button>
-          <button className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all duration-200">
+          <button 
+            onClick={handleQuickView}
+            className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-all duration-200"
+          >
             <Eye className="w-4 h-4 text-gray-600" />
           </button>
         </div>
         
         {/* Quick add to cart */}
         <div className={`absolute bottom-4 left-4 right-4 transition-all duration-300 ${isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-          <button className="w-full bg-white text-black py-2 px-4 rounded-lg font-medium hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2 shadow-lg">
+          <button 
+            onClick={handleQuickAdd}
+            className="w-full bg-white text-black py-2 px-4 rounded-lg font-medium hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2 shadow-lg"
+          >
             <ShoppingCart className="w-4 h-4" />
             <span>Quick Add</span>
           </button>

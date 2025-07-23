@@ -9,6 +9,7 @@ import CustomerLayout from "./layouts/CustomerLayout";
 // Halaman Publik & Customer
 const HomePage = React.lazy(() => import("./pages/HomePage"));
 const Products = React.lazy(() => import("./pages/Products"));
+const ProductDetail = React.lazy(() => import("./pages/ProductDetail")); // Tambahan baru
 const Cart = React.lazy(() => import("./pages/Cart"));
 const CustomerDashboard = React.lazy(() => import("./pages/CustomerDashboard"));
 
@@ -27,6 +28,7 @@ const Register = React.lazy(() => import("./pages/auth/Register"));
 
 const SuspenseLoader = () => (
   <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-black mx-auto mb-4"></div>
     <div className="text-xl">Loading...</div>
   </div>
 );
@@ -72,7 +74,6 @@ const GuestRoute = () => {
   return <Outlet />;
 };
 
-
 // --- Komponen Aplikasi Utama ---
 
 function App() {
@@ -84,6 +85,7 @@ function App() {
           <Route element={<CustomerLayout />}>
             <Route path="/" element={<HomePage />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/product/:id" element={<ProductDetail />} /> {/* Route baru untuk detail produk */}
           </Route>
 
           {/* RUTE TAMU - hanya untuk yang belum login */}
@@ -95,7 +97,6 @@ function App() {
           {/* RUTE CUSTOMER - hanya untuk customer yang sudah login */}
           <Route element={<ProtectedRoute requiredRole="customer" />}>
             <Route element={<CustomerLayout />}>
-              <Route path="/dashboard" element={<CustomerDashboard />} />
               <Route path="/cart" element={<Cart />} />
               {/* Tambahkan rute customer lain di sini */}
             </Route>
