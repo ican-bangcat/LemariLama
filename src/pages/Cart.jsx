@@ -8,12 +8,45 @@ import { getProductMainImage } from '../utils/imageUtils';
 const Cart = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { cartItems, loading, updateQuantity, removeFromCart, clearCart } = useCart();
+  const { cartItems, loading, updateQuantity, removeFromCart, clearCart, proceedToCheckout  } = useCart();
   
   const [selectedItems, setSelectedItems] = useState([]);
   const [promoCode, setPromoCode] = useState('');
   const [appliedPromo, setAppliedPromo] = useState(null);
   const [updatingItems, setUpdatingItems] = useState(new Set());
+const handleCheckout = () => {
+  if (selectedItems.length === 0) {
+    alert('Pilih minimal satu item untuk di-checkout');
+    return;
+  }
+
+  // Siapkan data cart items yang dipilih dengan format yang benar
+  const selectedCartItems = cartItems.filter(item => selectedItems.includes(item.id));
+  
+  // Format data untuk checkout
+  const checkoutData = selectedCartItems.map(item => ({
+    id: item.id,
+    product_id: item.product_id,
+    product_name: item.products?.name || 'Unknown Product',
+    price: item.products?.price || 0,
+    quantity: item.quantity,
+    size: item.size,
+    image: getProductMainImage(item.products?.images || []),
+    subtotal: (item.products?.price || 0) * item.quantity
+  }));
+
+  // Navigate ke checkout dengan data
+  navigate('/checkout', { 
+    state: { 
+      cartItems: checkoutData,
+      selectedItemIds: selectedItems,
+      subtotal,
+      discount,
+      deliveryFee,
+      total
+    }
+  });
+};
 
   // Redirect jika user belum login
   useEffect(() => {
@@ -556,11 +589,18 @@ const Cart = () => {
                 </div>
               </div>
 
-              <button 
+              {/* <button 
                 disabled={selectedCount === 0}
                 className="w-full bg-black text-white py-5 rounded-xl mt-8 hover:bg-gray-800 transition-all duration-300 font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
               >
                 Checkout ({selectedCount})
+              </button> */}
+              <button 
+                onClick={handleCheckout}
+                disabled={selectedItems.length === 0}
+                className="w-full bg-black text-white py-5 rounded-xl mt-8 hover:bg-gray-800 transition-all duration-300 font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 shadow-lg hover:shadow-xl"
+              >
+                Checkout ({selectedItems.length})
               </button>
 
               <div className="mt-6 text-center">

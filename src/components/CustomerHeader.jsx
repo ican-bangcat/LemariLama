@@ -84,11 +84,11 @@ const CustomerHeader = () => {
               <NavLink to="/products" className="text-gray-700 hover:text-black font-medium">
                 Shop
               </NavLink>
-              <NavLink to="/on-sale" className="text-gray-700 hover:text-black font-medium">
-                On Sale
+              <NavLink to="/wishlist" className="text-gray-700 hover:text-black font-medium">
+                Wishlist
               </NavLink>
-              <NavLink to="/new-arrivals" className="text-gray-700 hover:text-black font-medium">
-                New Arrivals
+              <NavLink to="/orders" className="text-gray-700 hover:text-black font-medium">
+                Orders
               </NavLink>
               <NavLink to="/brands" className="text-gray-700 hover:text-black font-medium">
                 Brands
@@ -185,18 +185,18 @@ const CustomerHeader = () => {
                 Shop
               </NavLink>
               <NavLink 
-                to="/on-sale" 
+                to="/wishlist" 
                 className="block py-2 text-gray-700 hover:text-black font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
-                On Sale
+                Wishlist
               </NavLink>
               <NavLink 
-                to="/new-arrivals" 
+                to="/orders" 
                 className="block py-2 text-gray-700 hover:text-black font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
-                New Arrivals
+                Orders
               </NavLink>
               <NavLink 
                 to="/brands" 

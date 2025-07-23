@@ -20,17 +20,22 @@ export const CartProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   
-  // Ref untuk tracking request yang sedang berjalan
+  // Refs for tracking ongoing requests
   const loadingTimeoutRef = useRef(null);
   const abortControllerRef = useRef(null);
 
-  // Load cart items ketika user login
+  // Calculate cart total
+  const cartTotal = cartItems.reduce((total, item) => {
+    return total + (item.price * item.quantity);
+  }, 0);
+
+  // Load cart items when user logs in
   useEffect(() => {
     if (user) {
       loadCartItems();
       loadCartCount();
     } else {
-      // Reset state ketika user logout
+      // Reset state when user logs out
       setCartItems([]);
       setCartCount(0);
       setLoading(false);
@@ -48,18 +53,17 @@ export const CartProvider = ({ children }) => {
     };
   }, [user]);
 
-  // Handle visibility change untuk mencegah stuck loading
+  // Handle visibility change to prevent stuck loading
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && loading) {
-        // Jika halaman menjadi visible dan masih loading, set timeout untuk reset
         loadingTimeoutRef.current = setTimeout(() => {
           if (loading) {
             console.warn('Loading timeout reached, resetting loading state');
             setLoading(false);
             setInitialLoad(false);
           }
-        }, 3000); // 3 detik timeout
+        }, 3000);
       }
     };
 
@@ -75,7 +79,7 @@ export const CartProvider = ({ children }) => {
   const loadCartItems = async () => {
     if (!user) return;
     
-    // Abort previous request jika ada
+    // Abort previous request if exists
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -83,17 +87,17 @@ export const CartProvider = ({ children }) => {
     
     setLoading(true);
     
-    // Set timeout untuk loading
+    // Set loading timeout
     loadingTimeoutRef.current = setTimeout(() => {
       console.warn('Cart loading timeout, forcing complete');
       setLoading(false);
       setInitialLoad(false);
-    }, 10000); // 10 detik timeout maksimal
+    }, 10000);
 
     try {
       const result = await CartService.getCartItems(user.id);
       
-      // Clear timeout karena request berhasil
+      // Clear timeout if request succeeds
       if (loadingTimeoutRef.current) {
         clearTimeout(loadingTimeoutRef.current);
       }
@@ -104,7 +108,6 @@ export const CartProvider = ({ children }) => {
     } catch (error) {
       if (error.name !== 'AbortError') {
         console.error('Error loading cart items:', error);
-        // Set empty array jika error
         setCartItems([]);
       }
     } finally {
@@ -137,7 +140,6 @@ export const CartProvider = ({ children }) => {
     try {
       const result = await CartService.addToCart(user.id, productId, quantity, size, notes);
       if (result.success) {
-        // Refresh cart data setelah menambah item
         await Promise.all([loadCartItems(), loadCartCount()]);
         return result;
       } else {
@@ -153,14 +155,11 @@ export const CartProvider = ({ children }) => {
     try {
       const result = await CartService.updateCartItemQuantity(cartId, quantity);
       if (result.success) {
-        // Update local state untuk immediate feedback
         setCartItems(prevItems => 
           prevItems.map(item => 
             item.id === cartId ? { ...item, quantity } : item
-          ).filter(item => item.quantity > 0) // Remove item jika quantity 0
+          ).filter(item => item.quantity > 0)
         );
-        
-        // Update cart count
         await loadCartCount();
         return result;
       } else {
@@ -168,7 +167,6 @@ export const CartProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error updating quantity:', error);
-      // Reload cart items jika update gagal
       await loadCartItems();
       throw error;
     }
@@ -178,7 +176,6 @@ export const CartProvider = ({ children }) => {
     try {
       const result = await CartService.removeFromCart(cartId);
       if (result.success) {
-        // Update local state untuk immediate feedback
         setCartItems(prevItems => prevItems.filter(item => item.id !== cartId));
         await loadCartCount();
         return result;
@@ -187,7 +184,6 @@ export const CartProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Error removing from cart:', error);
-      // Reload cart items jika remove gagal
       await loadCartItems();
       throw error;
     }
@@ -211,26 +207,33 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  // Helper function untuk force refresh cart
   const refreshCart = async () => {
     if (user) {
       await Promise.all([loadCartItems(), loadCartCount()]);
     }
   };
 
-  const value = {
-    cartItems,
-    cartCount,
-    loading: loading && initialLoad, // Only show loading on initial load
-    addToCart,
-    updateQuantity,
-    removeFromCart,
-    clearCart,
-    refreshCart
+  const proceedToCheckout = () => {
+    if (cartItems.length === 0) {
+      alert('Your cart is empty');
+      return false;
+    }
+    return true;
   };
 
   return (
-    <CartContext.Provider value={value}>
+    <CartContext.Provider value={{
+      cartItems,
+      cartCount,
+      cartTotal,
+      loading: loading && initialLoad,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      refreshCart,
+      proceedToCheckout
+    }}>
       {children}
     </CartContext.Provider>
   );

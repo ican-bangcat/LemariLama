@@ -1,5 +1,11 @@
 import React from "react";
-import { Routes, Route, BrowserRouter, Navigate, Outlet } from "react-router-dom";
+import {
+  Routes,
+  Route,
+  BrowserRouter,
+  Navigate,
+  Outlet,
+} from "react-router-dom";
 import { useAuth } from "./pages/contexts/AuthContext"; // Sesuaikan path jika perlu
 import { CartProvider } from "./pages/contexts/CartContext"; // Import CartProvider
 
@@ -13,7 +19,9 @@ const Products = React.lazy(() => import("./pages/Products"));
 const ProductDetail = React.lazy(() => import("./pages/ProductDetail")); // Tambahan baru
 const Cart = React.lazy(() => import("./pages/Cart"));
 const Address = React.lazy(() => import("./pages/UserAddresses"));
-
+const Checkout = React.lazy(() => import("./pages/Checkout"));
+const OrderSuccess = React.lazy(() => import("./pages/OrderSuccess"));
+const UserOrders = React.lazy(() => import("./pages/UserOrders"));
 
 // Halaman Admin (diimpor kembali)
 const AdminHome = React.lazy(() => import("./pages/AdminHome"));
@@ -52,7 +60,7 @@ const ProtectedRoute = ({ requiredRole }) => {
   // Jika role yang dibutuhkan tidak cocok dengan role pengguna,
   // arahkan ke halaman utama mereka.
   if (requiredRole && profile?.role !== requiredRole) {
-    const homePath = profile?.role === 'admin' ? '/admin/dashboard' : '/';
+    const homePath = profile?.role === "admin" ? "/admin/dashboard" : "/";
     return <Navigate to={homePath} replace />;
   }
 
@@ -69,7 +77,8 @@ const GuestRoute = () => {
 
   // Jika sudah login, arahkan ke dashboard yang sesuai
   if (user) {
-    const homePath = profile?.role === 'admin' ? '/admin/dashboard' : '/dashboard';
+    const homePath =
+      profile?.role === "admin" ? "/admin/dashboard" : "/dashboard";
     return <Navigate to={homePath} replace />;
   }
 
@@ -82,14 +91,17 @@ const GuestRoute = () => {
 function App() {
   return (
     <BrowserRouter>
-      <CartProvider> {/* Wrap dengan CartProvider */}
+      <CartProvider>
+        {" "}
+        {/* Wrap dengan CartProvider */}
         <React.Suspense fallback={<SuspenseLoader />}>
           <Routes>
             {/* RUTE PUBLIK - bisa diakses siapa saja */}
             <Route element={<CustomerLayout />}>
               <Route path="/" element={<HomePage />} />
               <Route path="/products" element={<Products />} />
-              <Route path="/product/:id" element={<ProductDetail />} /> {/* Route baru untuk detail produk */}
+              <Route path="/product/:id" element={<ProductDetail />} />{" "}
+              {/* Route baru untuk detail produk */}
             </Route>
 
             {/* RUTE TAMU - hanya untuk yang belum login */}
@@ -102,9 +114,14 @@ function App() {
             <Route element={<ProtectedRoute requiredRole="customer" />}>
               <Route element={<CustomerLayout />}>
                 <Route path="/cart" element={<Cart />} />
-                
                 <Route path="/address" element={<Address />} />
-                {/* Tambahkan rute customer lain di sini */}
+                {/* Route untuk Order System */}
+                <Route path="/checkout" element={<Checkout />} />
+                <Route
+                  path="/order-success/:orderId"
+                  element={<OrderSuccess />}
+                />
+                <Route path="/orders" element={<UserOrders />} />
               </Route>
             </Route>
 
@@ -113,7 +130,10 @@ function App() {
               {/* Anda bisa menambahkan <AdminLayout> di sini jika perlu */}
               <Route path="/admin/dashboard" element={<AdminHome />} />
               <Route path="/admin/product" element={<AdminProduct />} />
-              <Route path="/admin/testimonials" element={<AdminTestimonial />} />
+              <Route
+                path="/admin/testimonials"
+                element={<AdminTestimonial />}
+              />
               <Route path="/admin/customer" element={<CustomerPage />} />
               <Route path="/admin/order" element={<OrderDashboard />} />
               <Route path="/admin/history" element={<HistoryPage />} />
