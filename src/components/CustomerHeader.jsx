@@ -146,6 +146,14 @@ const CustomerHeader = () => {
                         <Settings size={18} />
                         <span>Pengaturan</span>
                       </Link>
+                      <Link
+                        to="/address"
+                        className="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <Settings size={18} />
+                        <span>Alamat</span>
+                      </Link>
                       <button
                         onClick={confirmLogout}
                         className="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors w-full text-left"

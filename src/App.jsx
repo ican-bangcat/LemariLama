@@ -12,7 +12,8 @@ const HomePage = React.lazy(() => import("./pages/HomePage"));
 const Products = React.lazy(() => import("./pages/Products"));
 const ProductDetail = React.lazy(() => import("./pages/ProductDetail")); // Tambahan baru
 const Cart = React.lazy(() => import("./pages/Cart"));
-const CustomerDashboard = React.lazy(() => import("./pages/CustomerDashboard"));
+const Address = React.lazy(() => import("./pages/UserAddresses"));
+
 
 // Halaman Admin (diimpor kembali)
 const AdminHome = React.lazy(() => import("./pages/AdminHome"));
@@ -101,7 +102,8 @@ function App() {
             <Route element={<ProtectedRoute requiredRole="customer" />}>
               <Route element={<CustomerLayout />}>
                 <Route path="/cart" element={<Cart />} />
-                <Route path="/dashboard" element={<CustomerDashboard />} />
+                
+                <Route path="/address" element={<Address />} />
                 {/* Tambahkan rute customer lain di sini */}
               </Route>
             </Route>
