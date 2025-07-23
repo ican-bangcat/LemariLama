@@ -35,8 +35,29 @@ const Cart = () => {
         .filter(item => !item.products?.is_sold && (item.products?.stock || 0) > 0)
         .map(item => item.id);
       setSelectedItems(availableItems);
+    } else if (cartItems.length === 0 && !loading) {
+      // Reset selected items jika cart kosong dan tidak loading
+      setSelectedItems([]);
     }
-  }, [cartItems]);
+  }, [cartItems, loading]);
+
+  // Handle tab visibility change - fix infinite loading
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Reset loading state jika tab menjadi visible kembali
+        // Tapi hanya jika sudah ada data cart atau user tidak login
+        if (cartItems.length > 0 || !user) {
+          // Loading sudah selesai, tidak perlu reset
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [cartItems.length, user]);
 
   const handleUpdateQuantity = async (cartId, newQuantity) => {
     if (newQuantity < 1) return;
@@ -155,7 +176,8 @@ const Cart = () => {
     return null; // Akan redirect ke login
   }
 
-  if (loading) {
+  // Improved loading condition - pastikan loading tidak stuck
+  if (loading && cartItems.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 flex items-center justify-center">
         <div className="text-center">

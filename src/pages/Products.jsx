@@ -10,6 +10,17 @@ import { getProductMainImage } from '../utils/imageUtils';
 import { useCart } from '../pages/contexts/CartContext';
 import { useAuth } from '../pages/contexts/AuthContext';
 
+// Simple cache untuk prevent re-loading
+const dataCache = {
+  products: [],
+  categories: [],
+  timestamp: null,
+  isValid: () => {
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 menit
+    return dataCache.timestamp && (Date.now() - dataCache.timestamp) < CACHE_DURATION;
+  }
+};
+
 // --- Komponen ProductCard yang dipercantik ---
 const ProductCard = ({ product, viewMode = 'grid' }) => {
   const navigate = useNavigate();
@@ -281,35 +292,70 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
 
 // --- Komponen Utama Products yang dipercantik ---
 const Products = () => {
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [products, setProducts] = useState(dataCache.products);
+  const [categories, setCategories] = useState(dataCache.categories);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [priceRange, setPriceRange] = useState('All');
   const [sortBy, setSortBy] = useState('newest');
   const [showFilters, setShowFilters] = useState(false);
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [viewMode, setViewMode] = useState('grid');
 
   useEffect(() => {
     const loadData = async () => {
+      // Jika cache valid dan ada data, gunakan cache
+      if (dataCache.isValid() && dataCache.products.length > 0) {
+        setProducts(dataCache.products);
+        setCategories(dataCache.categories);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError(null);
+      
+      const timeoutId = setTimeout(() => {
+        console.warn('Products loading timeout, forcing complete');
+        setLoading(false);
+      }, 8000);
+      
       try {
         const [productsData, categoriesData] = await Promise.all([
           getAllProducts(),
           getAllCategories()
         ]);
-        setProducts(productsData || []);
-        setCategories(categoriesData || []);
+        
+        clearTimeout(timeoutId);
+        
+        const newProducts = productsData || [];
+        const newCategories = categoriesData || [];
+        
+        // Update cache
+        dataCache.products = newProducts;
+        dataCache.categories = newCategories;
+        dataCache.timestamp = Date.now();
+        
+        setProducts(newProducts);
+        setCategories(newCategories);
       } catch (error) {
+        clearTimeout(timeoutId);
         setError(error.message);
       } finally {
         setLoading(false);
       }
     };
+    
     loadData();
+  }, []);
+
+  // Reset loading state saat component mount (navigation)
+  useEffect(() => {
+    // Jika ada data di cache, langsung set loading false
+    if (dataCache.products.length > 0) {
+      setLoading(false);
+    }
   }, []);
 
   const filteredProducts = useMemo(() => {
@@ -353,7 +399,7 @@ const Products = () => {
     setSortBy('newest');
   };
 
-  if (loading) {
+  if (loading && products.length === 0) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <div className="text-center">
