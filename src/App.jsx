@@ -47,7 +47,7 @@ const ProtectedRoute = ({ requiredRole }) => {
   // Jika role yang dibutuhkan tidak cocok dengan role pengguna,
   // arahkan ke halaman utama mereka.
   if (requiredRole && profile?.role !== requiredRole) {
-    const homePath = profile?.role === 'admin' ? '/admin/dashboard' : '/dashboard';
+    const homePath = profile?.role === 'admin' ? '/admin/dashboard' : '/';
     return <Navigate to={homePath} replace />;
   }
 
