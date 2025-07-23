@@ -218,7 +218,7 @@ const HomePage = () => {
       <section className="bg-black py-8 lg:py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap justify-center items-center gap-6 lg:gap-16">
-            {["VERSACE", "ZARA", "GUCCI", "PRADA", "Calvin Klein"].map(
+            {["PUMA", "NB", "GUCCI", "PRADA", "Calvin Klein"].map(
               (brand) => (
                 <div
                   key={brand}

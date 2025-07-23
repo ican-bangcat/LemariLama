@@ -17,6 +17,7 @@ const CustomerDashboard = React.lazy(() => import("./pages/CustomerDashboard"));
 // Halaman Admin (diimpor kembali)
 const AdminHome = React.lazy(() => import("./pages/AdminHome"));
 const AdminProduct = React.lazy(() => import("./pages/AdminProduct"));
+const AdminTestimonial = React.lazy(() => import("./pages/AdminTestimonial"));
 const CustomerPage = React.lazy(() => import("./pages/CustomerPage"));
 const OrderDashboard = React.lazy(() => import("./pages/OrderDashboard"));
 const HistoryPage = React.lazy(() => import("./pages/HistoryPage"));
@@ -110,6 +111,7 @@ function App() {
               {/* Anda bisa menambahkan <AdminLayout> di sini jika perlu */}
               <Route path="/admin/dashboard" element={<AdminHome />} />
               <Route path="/admin/product" element={<AdminProduct />} />
+              <Route path="/admin/testimonials" element={<AdminTestimonial />} />
               <Route path="/admin/customer" element={<CustomerPage />} />
               <Route path="/admin/order" element={<OrderDashboard />} />
               <Route path="/admin/history" element={<HistoryPage />} />
