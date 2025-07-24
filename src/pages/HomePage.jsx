@@ -253,8 +253,8 @@ const HomePage = () => {
 
       <div className="border-t border-gray-200"></div>
 
-      {/* Top Selling */}
-      <section className="py-16 lg:py-20 bg-white">
+      Top Selling
+      {/* <section className="py-16 lg:py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl lg:text-5xl font-bold text-center mb-12 text-black">
             TOP SELLING
@@ -270,10 +270,10 @@ const HomePage = () => {
             </button>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Browse by Style */}
-      <section className="py-16 lg:py-20 bg-gray-50">
+      {/* <section className="py-16 lg:py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl lg:text-5xl font-bold text-center mb-12 text-black">
             BROWSE BY DRESS STYLE
@@ -305,7 +305,7 @@ const HomePage = () => {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Customer Reviews */}
       <section className="py-16 lg:py-20 bg-white">
@@ -368,7 +368,7 @@ const HomePage = () => {
       </section>
 
       {/* Newsletter */}
-      <section className="py-16 lg:py-20 bg-black">
+      {/* <section className="py-16 lg:py-20 bg-black">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl lg:text-5xl font-bold text-white mb-8 leading-tight">
             STAY UP TO DATE ABOUT
@@ -388,14 +388,14 @@ const HomePage = () => {
             </button>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Footer */}
       <footer className="bg-gray-100 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
             <div className="lg:col-span-2">
-              <h3 className="text-2xl font-bold mb-4 text-black">SHOP.CO</h3>
+              <h3 className="text-2xl font-bold mb-4 text-black">Lemari Lama</h3>
               <p className="text-gray-600 mb-6 leading-relaxed">
                 We have clothes that suits your style and which you're proud to
                 wear. From women to men.
