@@ -106,3 +106,81 @@ export const getCategories = async () => {
     
     return data;
 }
+/**
+ * Mengambil produk terbaru untuk homepage.
+ * @param {number} limit - Jumlah produk yang ingin diambil (default 4)
+ */
+export const getNewProducts = async (limit = 4) => {
+    console.log(`Fetching ${limit} new products for homepage`);
+    
+    const { data, error } = await supabase
+        .from('products')
+        .select(`
+            *,
+            categories(name),
+            product_images(
+                id,
+                image_url,
+                is_primary,
+                display_order
+            )
+        `)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+        
+    if (error) {
+        console.error("Error fetching new products:", error);
+        throw new Error(error.message);
+    }
+    
+    // Format data untuk homepage - pastikan ada images array
+    const formattedData = data?.map(product => ({
+        ...product,
+        // Buat images array dari product_images
+        images: product.product_images
+            ?.sort((a, b) => a.display_order - b.display_order)
+            ?.map(img => ({ url: img.image_url, id: img.id })) || [],
+        // Hitung discount jika ada original_price
+        discount: product.original_price 
+            ? Math.round(((product.original_price - product.price) / product.original_price) * 100)
+            : null
+    })) || [];
+    
+    console.log("New products fetched successfully:", formattedData);
+    return formattedData;
+};
+
+/**
+ * Mengambil produk berdasarkan ID untuk detail page.
+ */
+export const getProductById = async (productId) => {
+    const { data, error } = await supabase
+        .from('products')
+        .select(`
+            *,
+            categories(name),
+            product_images(
+                id,
+                image_url,
+                is_primary,
+                display_order
+            )
+        `)
+        .eq('id', productId)
+        .single();
+        
+    if (error) {
+        console.error("Error fetching product by ID:", error);
+        throw new Error(error.message);
+    }
+    
+    // Format images array
+    const formattedProduct = {
+        ...data,
+        images: data.product_images
+            ?.sort((a, b) => a.display_order - b.display_order)
+            ?.map(img => ({ url: img.image_url, id: img.id })) || []
+    };
+    
+    return formattedProduct;
+};

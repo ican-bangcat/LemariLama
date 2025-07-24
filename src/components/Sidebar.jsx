@@ -56,7 +56,7 @@ const Sidebar = () => {
                         <AiOutlineFundView className="text-lg" />
                         Product
                     </NavLink>
-                    <NavLink
+                    {/* <NavLink
                         to="/admin/testimonials"
                         className={({ isActive }) =>
                             `px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center justify-start gap-2 ${isActive
@@ -103,7 +103,7 @@ const Sidebar = () => {
                     >
                         <SiSalesforce className="text-lg" />
                         History
-                    </NavLink>
+                    </NavLink> */}
                 </div>
             </div>
             <div className="mt-8">
