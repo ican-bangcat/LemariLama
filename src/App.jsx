@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import { useAuth } from "./pages/contexts/AuthContext"; // Sesuaikan path jika perlu
 import { CartProvider } from "./pages/contexts/CartContext"; // Import CartProvider
+import { WishlistProvider } from './pages/contexts/WishlistContext';
 
 // Layouts
 import CustomerLayout from "./layouts/CustomerLayout";
@@ -30,6 +31,7 @@ const AdminTestimonial = React.lazy(() => import("./pages/AdminTestimonial"));
 const CustomerPage = React.lazy(() => import("./pages/CustomerPage"));
 const AdminOrders = React.lazy(() => import("./pages/AdminOrders.jsx"));
 const HistoryPage = React.lazy(() => import("./pages/HistoryPage"));
+const WishlistPage = React.lazy(() => import("./pages/WishListPage"));
 
 // Halaman Auth
 const Login = React.lazy(() => import("./pages/auth/Login"));
@@ -92,6 +94,7 @@ function App() {
   return (
     <BrowserRouter>
       <CartProvider>
+        <WishlistProvider>
         {" "}
         {/* Wrap dengan CartProvider */}
         <React.Suspense fallback={<SuspenseLoader />}>
@@ -122,6 +125,7 @@ function App() {
                   element={<OrderSuccess />}
                 />
                 <Route path="/orders" element={<UserOrders />} />
+                <Route path="/wishlist" element={<WishlistPage />} />
               </Route>
             </Route>
 
@@ -143,6 +147,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </React.Suspense>
+        </WishlistProvider>
       </CartProvider>
     </BrowserRouter>
   );
