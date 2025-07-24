@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Eye, Edit, Package, Calendar, User, CreditCard, MapPin, X } from 'lucide-react';
+import { 
+  Search, Filter, Eye, Edit, Package, Calendar, User, CreditCard, MapPin, X, 
+  FileImage, CheckCircle, XCircle, Clock, AlertCircle, Download
+} from 'lucide-react';
 import { orderService } from '../pages/services/orderService';
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
@@ -20,6 +23,10 @@ const AdminOrders = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [total, setTotal] = useState(0);
+  const [paymentProofs, setPaymentProofs] = useState([]);
+  const [loadingProofs, setLoadingProofs] = useState(false);
+  const [selectedProofUrl, setSelectedProofUrl] = useState(null);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   // Load orders from Supabase
   useEffect(() => {
@@ -69,6 +76,65 @@ const AdminOrders = () => {
       setStats(data);
     } else {
       console.error('Error loading stats:', error);
+    }
+  };
+
+  const loadPaymentProofs = async (orderId) => {
+    setLoadingProofs(true);
+    try {
+      const { data, error } = await orderService.getPaymentProofs(orderId);
+      if (error) {
+        console.error('Error loading payment proofs:', error);
+        return;
+      }
+      setPaymentProofs(data || []);
+    } catch (error) {
+      console.error('Error loading payment proofs:', error);
+    } finally {
+      setLoadingProofs(false);
+    }
+  };
+
+  const viewPaymentProof = async (filePath) => {
+    try {
+      const { data: url, error } = await orderService.getPaymentProofUrl(filePath);
+      if (error) {
+        console.error('Error getting payment proof URL:', error);
+        alert('Gagal memuat bukti pembayaran');
+        return;
+      }
+      setSelectedProofUrl(url);
+    } catch (error) {
+      console.error('Error viewing payment proof:', error);
+      alert('Terjadi kesalahan saat memuat bukti pembayaran');
+    }
+  };
+
+  const updatePaymentProofStatus = async (proofId, status, adminNotes = '') => {
+    try {
+      const { data, error } = await orderService.updatePaymentProofStatus(proofId, status, adminNotes);
+      if (error) {
+        console.error('Error updating payment proof status:', error);
+        alert('Gagal mengubah status bukti pembayaran');
+        return;
+      }
+
+      // Update local payment proofs
+      setPaymentProofs(paymentProofs.map(proof => 
+        proof.id === proofId 
+          ? { ...proof, status, admin_notes: adminNotes, updated_at: new Date().toISOString() }
+          : proof
+      ));
+
+      // If approved, update order payment status
+      if (status === 'approved') {
+        await handlePaymentStatusUpdate(selectedOrder.id, 'paid');
+      }
+
+      alert('Status bukti pembayaran berhasil diubah');
+    } catch (error) {
+      console.error('Error updating payment proof status:', error);
+      alert('Terjadi kesalahan saat mengubah status');
     }
   };
 
@@ -124,7 +190,26 @@ const AdminOrders = () => {
     return methods[method] || method;
   };
 
+  const getPaymentStatusColor = (status) => {
+    const colors = {
+      pending: 'bg-yellow-100 text-yellow-800',
+      paid: 'bg-green-100 text-green-800',
+      failed: 'bg-red-100 text-red-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getProofStatusColor = (status) => {
+    const colors = {
+      pending: 'bg-yellow-100 text-yellow-800',
+      approved: 'bg-green-100 text-green-800',
+      rejected: 'bg-red-100 text-red-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
   const handleStatusUpdate = async (orderId, newStatus) => {
+    setUpdatingStatus(true);
     try {
       const { data, error } = await orderService.updateOrderStatus(orderId, newStatus);
       
@@ -147,9 +232,45 @@ const AdminOrders = () => {
 
       // Reload stats to update counts
       loadStats();
+      alert('Status pesanan berhasil diubah');
     } catch (error) {
       console.error('Error updating order status:', error);
       alert('Terjadi kesalahan saat mengubah status');
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const handlePaymentStatusUpdate = async (orderId, newPaymentStatus) => {
+    try {
+      const { data, error } = await orderService.updatePaymentStatus(orderId, newPaymentStatus);
+      
+      if (error) {
+        console.error('Error updating payment status:', error);
+        alert('Gagal mengubah status pembayaran');
+        return;
+      }
+
+      // Update local state
+      setOrders(orders.map(order => 
+        order.id === orderId 
+          ? { ...order, payment_status: newPaymentStatus, updated_at: new Date().toISOString() }
+          : order
+      ));
+      
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder({ 
+          ...selectedOrder, 
+          payment_status: newPaymentStatus, 
+          updated_at: new Date().toISOString() 
+        });
+      }
+
+      // Reload stats to update revenue
+      loadStats();
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      alert('Terjadi kesalahan saat mengubah status pembayaran');
     }
   };
 
@@ -164,6 +285,8 @@ const AdminOrders = () => {
       }
 
       setSelectedOrder(data);
+      // Load payment proofs for this order
+      await loadPaymentProofs(orderId);
     } catch (error) {
       console.error('Error loading order detail:', error);
       alert('Terjadi kesalahan saat memuat detail');
@@ -227,14 +350,6 @@ const AdminOrders = () => {
             <p className="text-gray-600">Kelola semua pesanan customer</p>
           </div>
 
-          {/* Debug Info */}
-          <div className="bg-blue-50 border border-blue-200 rounded p-4 mb-4">
-            <p className="text-sm text-blue-700">
-              Debug: Total orders: {total}, Current page: {currentPage}, 
-              Orders loaded: {orders.length}, Filter: {filterStatus}
-            </p>
-          </div>
-
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="bg-white rounded-lg shadow-sm p-6">
@@ -249,7 +364,7 @@ const AdminOrders = () => {
 
             <div className="bg-white rounded-lg shadow-sm p-6">
               <div className="flex items-center">
-                <Calendar className="w-8 h-8 text-yellow-600" />
+                <Clock className="w-8 h-8 text-yellow-600" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Menunggu Konfirmasi</p>
                   <p className="text-2xl font-bold text-gray-900">{stats.pendingOrders}</p>
@@ -341,6 +456,9 @@ const AdminOrders = () => {
                           Status
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Pembayaran
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Total
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -383,8 +501,14 @@ const AdminOrders = () => {
                             <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(order.status)}`}>
                               {getStatusText(order.status)}
                             </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getPaymentStatusColor(order.payment_status)}`}>
+                              {order.payment_status === 'paid' ? 'Sudah Dibayar' : 
+                               order.payment_status === 'failed' ? 'Gagal' : 'Belum Dibayar'}
+                            </span>
                             <div className="text-xs text-gray-500 mt-1">
-                              {order.payment_status === 'paid' ? 'Sudah Dibayar' : 'Belum Dibayar'}
+                              {getPaymentMethodText(order.payment_method)}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -397,6 +521,7 @@ const AdminOrders = () => {
                             <button
                               onClick={() => loadOrderDetail(order.id)}
                               className="text-blue-600 hover:text-blue-900 mr-3"
+                              title="Lihat Detail"
                             >
                               <Eye className="w-5 h-5" />
                             </button>
@@ -459,7 +584,7 @@ const AdminOrders = () => {
       {/* Order Detail Modal */}
       {selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b">
               <h2 className="text-xl font-semibold">Detail Pesanan - {selectedOrder.order_number}</h2>
               <button
@@ -471,7 +596,7 @@ const AdminOrders = () => {
             </div>
 
             <div className="p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 {/* Order Info */}
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Informasi Pesanan</h3>
@@ -488,12 +613,13 @@ const AdminOrders = () => {
                       <span className="text-gray-600">Metode Pembayaran:</span>
                       <span>{getPaymentMethodText(selectedOrder.payment_method)}</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-600">Status:</span>
+                    <div className="flex flex-col space-y-2">
+                      <span className="text-gray-600">Status Pesanan:</span>
                       <select
                         value={selectedOrder.status}
                         onChange={(e) => handleStatusUpdate(selectedOrder.id, e.target.value)}
-                        className="border border-gray-300 rounded px-2 py-1 text-sm"
+                        disabled={updatingStatus}
+                        className="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       >
                         <option value="pending">Menunggu Konfirmasi</option>
                         <option value="confirmed">Dikonfirmasi</option>
@@ -503,15 +629,17 @@ const AdminOrders = () => {
                         <option value="cancelled">Dibatalkan</option>
                       </select>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex flex-col space-y-2">
                       <span className="text-gray-600">Status Pembayaran:</span>
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        selectedOrder.payment_status === 'paid' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                        {selectedOrder.payment_status === 'paid' ? 'Sudah Dibayar' : 'Belum Dibayar'}
-                      </span>
+                      <select
+                        value={selectedOrder.payment_status || 'pending'}
+                        onChange={(e) => handlePaymentStatusUpdate(selectedOrder.id, e.target.value)}
+                        className="border border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="pending">Belum Dibayar</option>
+                        <option value="paid">Sudah Dibayar</option>
+                        <option value="failed">Gagal</option>
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -535,6 +663,78 @@ const AdminOrders = () => {
                     <div className="mt-4">
                       <h4 className="font-medium text-gray-900 mb-1">Catatan:</h4>
                       <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">{selectedOrder.notes}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Payment Proofs */}
+                <div>
+                  <div className="flex items-center mb-3">
+                    <FileImage className="w-5 h-5 text-gray-600 mr-2" />
+                    <h3 className="text-lg font-semibold">Bukti Pembayaran</h3>
+                  </div>
+                  
+                  {loadingProofs ? (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                      <p className="text-sm text-gray-500">Memuat...</p>
+                    </div>
+                  ) : paymentProofs.length > 0 ? (
+                    <div className="space-y-3">
+                      {paymentProofs.map((proof) => (
+                        <div key={proof.id} className="border border-gray-200 rounded-lg p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium text-gray-900">{proof.file_name}</span>
+                            <span className={`px-2 py-1 text-xs rounded-full ${getProofStatusColor(proof.status)}`}>
+                              {proof.status === 'pending' ? 'Menunggu' : 
+                               proof.status === 'approved' ? 'Disetujui' : 'Ditolak'}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => viewPaymentProof(proof.file_path)}
+                              className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              Lihat
+                            </button>
+                            {proof.status === 'pending' && (
+                              <>
+                                <button
+                                  onClick={() => updatePaymentProofStatus(proof.id, 'approved')}
+                                  className="text-green-600 hover:text-green-800 text-sm flex items-center"
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-1" />
+                                  Setujui
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    const notes = prompt('Alasan penolakan (opsional):');
+                                    updatePaymentProofStatus(proof.id, 'rejected', notes);
+                                  }}
+                                  className="text-red-600 hover:text-red-800 text-sm flex items-center"
+                                >
+                                  <XCircle className="w-4 h-4 mr-1" />
+                                  Tolak
+                                </button>
+                              </>
+                            )}
+                          </div>
+                          {proof.admin_notes && (
+                            <div className="mt-2 text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                              <strong>Catatan Admin:</strong> {proof.admin_notes}
+                            </div>
+                          )}
+                          <div className="text-xs text-gray-500 mt-1">
+                            Upload: {formatDate(proof.created_at)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-500">
+                      <FileImage className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                      <p className="text-sm">Belum ada bukti pembayaran</p>
                     </div>
                   )}
                 </div>
@@ -582,6 +782,38 @@ const AdminOrders = () => {
                   <span>Total:</span>
                   <span>{formatPrice(selectedOrder.total_amount || 0)}</span>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Proof Image Modal */}
+      {selectedProofUrl && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-60 p-4">
+          <div className="bg-white rounded-lg max-w-4xl max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b">
+              <h3 className="text-lg font-semibold">Bukti Pembayaran</h3>
+              <button
+                onClick={() => setSelectedProofUrl(null)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-4 max-h-[70vh] overflow-auto">
+              <img 
+                src={selectedProofUrl} 
+                alt="Bukti Pembayaran" 
+                className="max-w-full h-auto mx-auto"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextElementSibling.style.display = 'block';
+                }}
+              />
+              <div className="text-center py-8 text-gray-500" style={{ display: 'none' }}>
+                <AlertCircle className="w-12 h-12 mx-auto mb-2" />
+                <p>Gagal memuat gambar</p>
               </div>
             </div>
           </div>
