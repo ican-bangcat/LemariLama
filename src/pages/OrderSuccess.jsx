@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../pages/contexts/AuthContext';
 import { orderService } from '../pages/services/orderService';
+import PaymentInstructions from '../components/PaymentInstructions';
 import { CheckCircle, Package, Clock, CreditCard, MapPin, ArrowRight, Loader2, AlertCircle, Home, ShoppingBag } from 'lucide-react';
 
 const OrderSuccess = () => {
@@ -19,12 +20,7 @@ const OrderSuccess = () => {
 
     if (!user) {
       console.log('No user, redirecting to login');
-      navigate('/login', { 
-        state: { 
-          from: `/order-success/${orderId}`,
-          message: 'Please login to view your order' 
-        }
-      });
+      navigate('/login');
       return;
     }
 
@@ -144,14 +140,17 @@ const OrderSuccess = () => {
   };
 
   const getProductImage = (orderItem) => {
-    // Coba ambil gambar dari relasi products dulu
     if (orderItem.products?.images && orderItem.products.images.length > 0) {
       const images = orderItem.products.images;
       return Array.isArray(images) ? images[0] : images;
     }
-    
-    // Fallback ke placeholder
     return 'https://placehold.co/64x64/E2E8F0/4A5568?text=No+Image';
+  };
+
+  const needsPaymentInstructions = () => {
+    return order && 
+           (order.payment_method === 'bank_transfer' || order.payment_method === 'e_wallet') && 
+           order.payment_status === 'pending';
   };
 
   // Loading state
@@ -245,9 +244,16 @@ const OrderSuccess = () => {
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Pesanan Berhasil Dibuat!</h1>
           <p className="text-gray-600 text-lg">
-            Terima kasih atas pesanan Anda. Kami akan segera memproses pesanan Anda.
+            Terima kasih atas pesanan Anda. {needsPaymentInstructions() ? 'Silakan lakukan pembayaran sesuai instruksi di bawah.' : 'Kami akan segera memproses pesanan Anda.'}
           </p>
         </div>
+
+        {/* Payment Instructions - Show immediately for bank_transfer and e_wallet */}
+        {needsPaymentInstructions() && (
+          <div className="mb-8">
+            <PaymentInstructions order={order} />
+          </div>
+        )}
 
         {/* Order Details */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
@@ -404,17 +410,26 @@ const OrderSuccess = () => {
             Langkah Selanjutnya
           </h3>
           <div className="space-y-3 text-blue-800">
-            {order.payment_method === 'bank_transfer' && order.payment_status === 'pending' && (
+            {needsPaymentInstructions() && (
               <div className="flex items-start">
                 <div className="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
                   <span className="text-blue-700 text-xs font-bold">1</span>
                 </div>
                 <div>
-                  <p className="font-medium">Lakukan pembayaran</p>
-                  <p className="text-sm text-blue-700">Instruksi pembayaran akan dikirimkan via email dalam 5-10 menit</p>
+                  <p className="font-medium">Lakukan pembayaran sesuai instruksi di atas</p>
+                  <p className="text-sm text-blue-700">Pastikan nominal transfer sama persis dengan total pesanan</p>
                 </div>
               </div>
             )}
+            <div className="flex items-start">
+              <div className="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
+                <span className="text-blue-700 text-xs font-bold">{needsPaymentInstructions() ? '2' : '1'}</span>
+              </div>
+              <div>
+                <p className="font-medium">Upload bukti pembayaran</p>
+                <p className="text-sm text-blue-700">Kunjungi halaman "Pesanan Saya" untuk upload bukti pembayaran</p>
+              </div>
+            </div>
             <div className="flex items-start">
               <div className="w-6 h-6 bg-blue-200 rounded-full flex items-center justify-center mr-3 mt-0.5 flex-shrink-0">
                 <Package className="w-3 h-3 text-blue-700" />
@@ -430,7 +445,7 @@ const OrderSuccess = () => {
               </div>
               <div>
                 <p className="font-medium">Notifikasi update status</p>
-                <p className="text-sm text-blue-700">Anda akan menerima email dan notifikasi untuk setiap update status pesanan</p>
+                <p className="text-sm text-blue-700">Anda akan menerima update status melalui halaman pesanan</p>
               </div>
             </div>
           </div>
@@ -465,9 +480,14 @@ const OrderSuccess = () => {
         <div className="mt-8 text-center">
           <p className="text-gray-600">
             Ada pertanyaan tentang pesanan Anda?{' '}
-            <button className="text-blue-600 hover:text-blue-800 underline font-medium">
+            <a 
+              href="https://wa.me/6281234567890" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 underline font-medium"
+            >
               Hubungi Customer Service
-            </button>
+            </a>
           </p>
         </div>
       </div>

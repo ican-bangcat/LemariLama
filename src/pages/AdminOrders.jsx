@@ -23,6 +23,9 @@ const AdminOrders = () => {
 
   // Load orders from Supabase
   useEffect(() => {
+    console.log('=== LOADING ORDERS ===');
+    console.log('Current page:', currentPage);
+    console.log('Filter status:', filterStatus);
     loadOrders();
     loadStats();
   }, [currentPage, filterStatus]);
@@ -30,6 +33,7 @@ const AdminOrders = () => {
   const loadOrders = async () => {
     setLoading(true);
     try {
+      console.log('Calling orderService.getAllOrders...');
       const status = filterStatus === 'all' ? null : filterStatus;
       const { data, error, total: totalCount, hasMore: moreData } = await orderService.getAllOrders(
         currentPage, 
@@ -37,25 +41,34 @@ const AdminOrders = () => {
         status
       );
 
+      console.log('Service response:', { data, error, totalCount, moreData });
+
       if (error) {
         console.error('Error loading orders:', error);
+        alert('Error loading orders: ' + error);
         return;
       }
 
+      console.log('Orders loaded successfully:', data?.length || 0);
       setOrders(data || []);
       setTotal(totalCount || 0);
       setHasMore(moreData);
     } catch (error) {    
       console.error('Error loading orders:', error);
+      alert('Exception loading orders: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
   const loadStats = async () => {
+    console.log('Loading stats...');
     const { data, error } = await orderService.getOrderStats();
     if (data && !error) {
+      console.log('Stats loaded:', data);
       setStats(data);
+    } else {
+      console.error('Error loading stats:', error);
     }
   };
 
@@ -157,13 +170,36 @@ const AdminOrders = () => {
     }
   };
 
+  // Fixed search filtering
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.order_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.shipping_address?.recipient_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         '';
-    return matchesSearch;
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    
+    // Search in order number
+    if (order.order_number?.toLowerCase().includes(searchLower)) {
+      return true;
+    }
+    
+    // Search in shipping address recipient name
+    if (order.shipping_address?.recipient_name?.toLowerCase().includes(searchLower)) {
+      return true;
+    }
+    
+    // Search in profile full name (if available)
+    if (order.profiles?.full_name?.toLowerCase().includes(searchLower)) {
+      return true;
+    }
+    
+    // Search in profile phone (if available)
+    if (order.profiles?.phone?.toLowerCase().includes(searchLower)) {
+      return true;
+    }
+    
+    return false;
   });
 
+  // Fixed status options counts
   const statusOptions = [
     { value: 'all', label: 'Semua Status', count: total },
     { value: 'pending', label: 'Menunggu', count: orders.filter(o => o.status === 'pending').length },
@@ -189,6 +225,14 @@ const AdminOrders = () => {
           <div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Manajemen Pesanan</h1>
             <p className="text-gray-600">Kelola semua pesanan customer</p>
+          </div>
+
+          {/* Debug Info */}
+          <div className="bg-blue-50 border border-blue-200 rounded p-4 mb-4">
+            <p className="text-sm text-blue-700">
+              Debug: Total orders: {total}, Current page: {currentPage}, 
+              Orders loaded: {orders.length}, Filter: {filterStatus}
+            </p>
           </div>
 
           {/* Stats Cards */}
@@ -256,6 +300,7 @@ const AdminOrders = () => {
                   <select
                     value={filterStatus}
                     onChange={(e) => {
+                      console.log('Status filter changed to:', e.target.value);
                       setFilterStatus(e.target.value);
                       setCurrentPage(1);
                     }}
@@ -324,10 +369,12 @@ const AdminOrders = () => {
                               <User className="w-8 h-8 text-gray-400 mr-3" />
                               <div>
                                 <div className="text-sm font-medium text-gray-900">
-                                  {order.shipping_address?.recipient_name || 'N/A'}
+                                  {order.shipping_address?.recipient_name || 
+                                   order.profiles?.full_name || 'N/A'}
                                 </div>
                                 <div className="text-sm text-gray-500">
-                                  {order.shipping_address?.phone || 'N/A'}
+                                  {order.shipping_address?.phone || 
+                                   order.profiles?.phone || 'N/A'}
                                 </div>
                               </div>
                             </div>
@@ -363,7 +410,17 @@ const AdminOrders = () => {
                 {filteredOrders.length === 0 && !loading && (
                   <div className="text-center py-12">
                     <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Tidak ada pesanan ditemukan</p>
+                    <p className="text-gray-500">
+                      {orders.length === 0 ? 'Tidak ada pesanan ditemukan' : 'Tidak ada pesanan yang cocok dengan pencarian'}
+                    </p>
+                    {orders.length === 0 && (
+                      <button 
+                        onClick={() => loadOrders()}
+                        className="mt-2 text-blue-600 hover:text-blue-800"
+                      >
+                        Refresh data
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

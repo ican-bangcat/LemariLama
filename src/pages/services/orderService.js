@@ -1,5 +1,5 @@
 // services/orderService.js
-import { supabase } from '../lib/supabase';
+import { supabase } from "../lib/supabase";
 
 export const orderService = {
   // Generate nomor order unik
@@ -11,116 +11,118 @@ export const orderService = {
 
   // Buat pesanan baru dari cart
   async createOrder(userId, orderData) {
-    console.log('=== ORDER SERVICE CREATE ORDER ===');
-    console.log('User ID:', userId);
-    console.log('Order data received:', orderData);
-    
+    console.log("=== ORDER SERVICE CREATE ORDER ===");
+    console.log("User ID:", userId);
+    console.log("Order data received:", orderData);
+
     try {
       const { cartItems, shippingAddress, paymentMethod, notes } = orderData;
-      
-      console.log('Extracted cart items:', cartItems);
-      console.log('Shipping address:', shippingAddress);
-      console.log('Payment method:', paymentMethod);
-      
+
+      console.log("Extracted cart items:", cartItems);
+      console.log("Shipping address:", shippingAddress);
+      console.log("Payment method:", paymentMethod);
+
       // Validasi data
       if (!cartItems || cartItems.length === 0) {
-        throw new Error('Tidak ada item dalam pesanan');
+        throw new Error("Tidak ada item dalam pesanan");
       }
-      
+
       if (!shippingAddress) {
-        throw new Error('Alamat pengiriman harus dipilih');
+        throw new Error("Alamat pengiriman harus dipilih");
       }
-      
+
       // Hitung total
       const subtotal = cartItems.reduce((total, item) => {
         const itemPrice = item.price || 0;
         const itemQuantity = item.quantity || 1;
-        return total + (itemPrice * itemQuantity);
+        return total + itemPrice * itemQuantity;
       }, 0);
-      
+
       const shippingCost = subtotal > 500000 ? 0 : 15000; // Free shipping over 500k
       const totalAmount = subtotal + shippingCost;
-      
+
       // Generate nomor order
       const orderNumber = this.generateOrderNumber();
-      
-      console.log('Creating order with data:', {
+
+      console.log("Creating order with data:", {
         userId,
         orderNumber,
         subtotal,
         shippingCost,
         totalAmount,
         cartItems: cartItems.length,
-        shippingAddress: shippingAddress.recipient_name
+        shippingAddress: shippingAddress.recipient_name,
       });
-      
+
       // Buat order
       const { data: order, error: orderError } = await supabase
-        .from('orders')
-        .insert([{
-          user_id: userId,
-          order_number: orderNumber,
-          total_amount: totalAmount,
-          shipping_cost: shippingCost,
-          discount_amount: 0,
-          payment_method: paymentMethod,
-          shipping_address: shippingAddress,
-          notes: notes || null
-        }])
+        .from("orders")
+        .insert([
+          {
+            user_id: userId,
+            order_number: orderNumber,
+            total_amount: totalAmount,
+            shipping_cost: shippingCost,
+            discount_amount: 0,
+            payment_method: paymentMethod,
+            shipping_address: shippingAddress,
+            notes: notes || null,
+          },
+        ])
         .select()
         .single();
 
       if (orderError) {
-        console.error('Error creating order:', orderError);
+        console.error("Error creating order:", orderError);
         throw orderError;
       }
 
-      console.log('Order created successfully:', order.id);
+      console.log("Order created successfully:", order.id);
 
       // Buat order items
-      const orderItems = cartItems.map(item => ({
+      const orderItems = cartItems.map((item) => ({
         order_id: order.id,
         product_id: item.product_id,
         product_name: item.product_name,
         product_price: item.price,
         quantity: item.quantity,
         size: item.size || null,
-        subtotal: (item.price || 0) * (item.quantity || 1)
+        subtotal: (item.price || 0) * (item.quantity || 1),
       }));
 
-      console.log('Creating order items:', orderItems.length);
+      console.log("Creating order items:", orderItems.length);
 
       const { error: itemsError } = await supabase
-        .from('order_items')
+        .from("order_items")
         .insert(orderItems);
 
       if (itemsError) {
-        console.error('Error creating order items:', itemsError);
+        console.error("Error creating order items:", itemsError);
         // Rollback: hapus order yang sudah dibuat
-        await supabase.from('orders').delete().eq('id', order.id);
+        await supabase.from("orders").delete().eq("id", order.id);
         throw itemsError;
       }
 
-      console.log('Order items created successfully');
+      console.log("Order items created successfully");
 
       // Clear cart setelah order berhasil
       const { error: cartError } = await supabase
-        .from('carts')
+        .from("carts")
         .delete()
-        .eq('user_id', userId);
+        .eq("user_id", userId);
 
       if (cartError) {
-        console.warn('Failed to clear cart:', cartError.message);
+        console.warn("Failed to clear cart:", cartError.message);
       }
 
-      console.log('Cart cleared successfully');
+      console.log("Cart cleared successfully");
 
       return { data: order, error: null };
     } catch (error) {
-      console.error('Error in createOrder:', error);
-      return { 
-        data: null, 
-        error: error.message || 'Terjadi kesalahan saat membuat pesanan'
+      console.error("Error in createOrder:", error);
+      return {
+        data: null,
+        error: error.message || "Terjadi kesalahan saat membuat pesanan",
       };
     }
   },
@@ -129,10 +131,11 @@ export const orderService = {
   async getUserOrders(userId, page = 1, limit = 10) {
     try {
       const offset = (page - 1) * limit;
-      
+
       const { data, error, count } = await supabase
-        .from('orders')
-        .select(`
+        .from("orders")
+        .select(
+          `
           *,
           order_items (
             id,
@@ -147,35 +150,38 @@ export const orderService = {
               images
             )
           )
-        `, { count: 'exact' })
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+        `,
+          { count: "exact" }
+        )
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
 
       if (error) throw error;
 
-      return { 
-        data: data || [], 
+      return {
+        data: data || [],
         error: null,
         total: count,
-        hasMore: count > offset + limit
+        hasMore: count > offset + limit,
       };
     } catch (error) {
-      console.error('Error fetching user orders:', error);
+      console.error("Error fetching user orders:", error);
       return { data: [], error: error.message, total: 0, hasMore: false };
     }
   },
 
-  // Ambil detail pesanan - FIXED VERSION
+  // Ambil detail pesanan
   async getOrderById(orderId, userId = null) {
     try {
-      console.log('=== FETCHING ORDER BY ID ===');
-      console.log('Order ID:', orderId);
-      console.log('User ID:', userId);
-      
+      console.log("=== FETCHING ORDER BY ID ===");
+      console.log("Order ID:", orderId);
+      console.log("User ID:", userId);
+
       let query = supabase
-        .from('orders')
-        .select(`
+        .from("orders")
+        .select(
+          `
           *,
           order_items (
             id,
@@ -192,33 +198,34 @@ export const orderService = {
               price
             )
           )
-        `)
-        .eq('id', orderId);
+        `
+        )
+        .eq("id", orderId);
 
       // Jika userId diberikan, filter berdasarkan user (untuk customer)
       if (userId) {
-        query = query.eq('user_id', userId);
+        query = query.eq("user_id", userId);
       }
 
-      console.log('Executing query...');
+      console.log("Executing query...");
       const { data, error } = await query.single();
 
-      console.log('Query result:', { data, error });
+      console.log("Query result:", { data, error });
 
       if (error) {
-        console.error('Query error:', error);
+        console.error("Query error:", error);
         throw error;
       }
-      
+
       if (!data) {
-        console.error('No data returned');
-        throw new Error('Pesanan tidak ditemukan');
+        console.error("No data returned");
+        throw new Error("Pesanan tidak ditemukan");
       }
 
-      console.log('Order fetched successfully:', data);
+      console.log("Order fetched successfully:", data);
       return { data, error: null };
     } catch (error) {
-      console.error('Error fetching order:', error);
+      console.error("Error fetching order:", error);
       return { data: null, error: error.message };
     }
   },
@@ -227,19 +234,19 @@ export const orderService = {
   async updateOrderStatus(orderId, status) {
     try {
       const { data, error } = await supabase
-        .from('orders')
-        .update({ 
+        .from("orders")
+        .update({
           status,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', orderId)
+        .eq("id", orderId)
         .select()
         .single();
 
       if (error) throw error;
       return { data, error: null };
     } catch (error) {
-      console.error('Error updating order status:', error);
+      console.error("Error updating order status:", error);
       return { data: null, error: error.message };
     }
   },
@@ -248,94 +255,143 @@ export const orderService = {
   async updatePaymentStatus(orderId, paymentStatus) {
     try {
       const { data, error } = await supabase
-        .from('orders')
-        .update({ 
+        .from("orders")
+        .update({
           payment_status: paymentStatus,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', orderId)
+        .eq("id", orderId)
         .select()
         .single();
 
       if (error) throw error;
       return { data, error: null };
     } catch (error) {
-      console.error('Error updating payment status:', error);
+      console.error("Error updating payment status:", error);
       return { data: null, error: error.message };
     }
   },
 
-  // Cancel order (hanya untuk pending orders)
-  async cancelOrder(orderId, userId) {
-    try {
-      // Cek apakah order masih bisa dibatalkan
-      const { data: order, error: fetchError } = await supabase
-        .from('orders')
-        .select('status, user_id')
-        .eq('id', orderId)
-        .eq('user_id', userId)
-        .single();
+  // Cancel order - FIXED VERSION
+ // Fixed cancelOrder function di orderService.js
+async cancelOrder(orderId, userId) {
+  try {
+    console.log("=== CANCEL ORDER ===");
+    console.log("Order ID:", orderId);
+    console.log("User ID:", userId);
 
-      if (fetchError) throw fetchError;
+    // Cek apakah order masih bisa dibatalkan dan milik user
+    const { data: order, error: fetchError } = await supabase
+      .from("orders")
+      .select("status, user_id")
+      .eq("id", orderId)
+      .eq("user_id", userId)
+      .single(); // Gunakan .single() untuk mendapatkan satu record
 
-      if (order.status !== 'pending') {
-        throw new Error('Pesanan tidak dapat dibatalkan');
-      }
+    console.log("Fetch result:", { order, fetchError });
 
-      const { data, error } = await supabase
-        .from('orders')
-        .update({ 
-          status: 'cancelled',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', orderId)
-        .eq('user_id', userId)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return { data, error: null };
-    } catch (error) {
-      console.error('Error cancelling order:', error);
-      return { data: null, error: error.message };
+    if (fetchError) {
+      console.error("Fetch error:", fetchError);
+      throw fetchError;
     }
-  },
 
-  // Ambil semua pesanan (untuk admin) - FIXED VERSION
+    if (!order) {
+      throw new Error("Pesanan tidak ditemukan");
+    }
+
+    if (order.status !== "pending") {
+      throw new Error("Pesanan tidak dapat dibatalkan karena sudah diproses");
+    }
+
+    // Update status order dengan menggunakan .single() untuk mendapatkan data yang diupdate
+    const { data, error } = await supabase
+      .from("orders")
+      .update({
+        status: "cancelled",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", orderId)
+      .eq("user_id", userId)
+      .select()
+      .single(); // Tambahkan .single() di sini
+
+    console.log("Update result:", { data, error });
+
+    if (error) {
+      console.error("Update error:", error);
+      throw error;
+    }
+
+    if (!data) {
+      throw new Error("Gagal membatalkan pesanan - tidak ada data yang diupdate");
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    console.error("Error cancelling order:", error);
+    return { data: null, error: error.message };
+  }
+},
+  // Ambil semua pesanan (untuk admin)
   async getAllOrders(page = 1, limit = 20, status = null) {
     try {
-      const offset = (page - 1) * limit;
-      
-      let query = supabase
-        .from('orders')
-        .select(`
-          *,
-          order_items (
-            id,
-            product_name,
-            quantity,
-            subtotal
-          )
-        `, { count: 'exact' });
+      console.log("=== FETCHING ALL ORDERS FOR ADMIN ===");
+      console.log("Page:", page, "Limit:", limit, "Status:", status);
 
-      if (status) {
-        query = query.eq('status', status);
+      const offset = (page - 1) * limit;
+
+      let query = supabase.from("orders_with_profiles").select(
+        `
+        *,
+        order_items (
+          id,
+          product_name,
+          quantity,
+          subtotal
+        )
+      `,
+        { count: "exact" }
+      );
+
+      if (status && status !== "all") {
+        query = query.eq("status", status);
       }
 
       const { data, error, count } = await query
-        .order('created_at', { ascending: false })
+        .order("created_at", { ascending: false })
         .range(offset, offset + limit - 1);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Database error:", error);
+        throw error;
+      }
 
-      return { 
-        data: data || [], 
+      // Transform data to match expected format
+      const transformedData =
+        data?.map((order) => ({
+          ...order,
+          profiles: {
+            name: order.customer_name,
+            phone: order.customer_phone,
+            address: order.customer_address,
+          },
+        })) || [];
+
+      console.log(
+        "Orders fetched:",
+        transformedData.length,
+        "Total count:",
+        count
+      );
+
+      return {
+        data: transformedData,
         error: null,
-        total: count,
-        hasMore: count > offset + limit
+        total: count || 0,
+        hasMore: (count || 0) > offset + limit,
       };
     } catch (error) {
-      console.error('Error fetching all orders:', error);
+      console.error("Error fetching all orders:", error);
       return { data: [], error: error.message, total: 0, hasMore: false };
     }
   },
@@ -345,43 +401,150 @@ export const orderService = {
     try {
       // Total orders
       const { count: totalOrders } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true });
+        .from("orders")
+        .select("*", { count: "exact", head: true });
 
       // Pending orders
       const { count: pendingOrders } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
+        .from("orders")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pending");
 
       // Orders hari ini
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
       const { count: todayOrders } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', `${today}T00:00:00.000Z`)
-        .lt('created_at', `${today}T23:59:59.999Z`);
+        .from("orders")
+        .select("*", { count: "exact", head: true })
+        .gte("created_at", `${today}T00:00:00.000Z`)
+        .lt("created_at", `${today}T23:59:59.999Z`);
 
       // Total revenue
       const { data: revenueData } = await supabase
-        .from('orders')
-        .select('total_amount')
-        .eq('payment_status', 'paid');
+        .from("orders")
+        .select("total_amount")
+        .eq("payment_status", "paid");
 
-      const totalRevenue = revenueData?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
+      const totalRevenue =
+        revenueData?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
 
       return {
         data: {
           totalOrders: totalOrders || 0,
           pendingOrders: pendingOrders || 0,
           todayOrders: todayOrders || 0,
-          totalRevenue
+          totalRevenue,
         },
-        error: null
+        error: null,
       };
     } catch (error) {
-      console.error('Error fetching order stats:', error);
+      console.error("Error fetching order stats:", error);
       return { data: null, error: error.message };
     }
-  }
+  },
+
+  // Upload payment proof
+  async uploadPaymentProof(orderId, file, userId) {
+    try {
+      console.log("Uploading payment proof for order:", orderId);
+
+      // Create unique file name
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${userId}/${orderId}/${Date.now()}.${fileExt}`;
+
+      // Upload file to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("payment-proofs")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+      if (uploadError) {
+        console.error("Upload error:", uploadError);
+        throw uploadError;
+      }
+
+      // Save payment proof record to database
+      const { data, error } = await supabase
+        .from("payment_proofs")
+        .insert({
+          order_id: orderId,
+          file_name: file.name,
+          file_path: fileName,
+          file_size: file.size,
+          mime_type: file.type,
+          status: "pending",
+        })
+        .select()
+        .single();
+
+      if (error) {
+        // If database insert fails, clean up uploaded file
+        await supabase.storage.from("payment-proofs").remove([fileName]);
+        throw error;
+      }
+
+      return { data, error: null };
+    } catch (error) {
+      console.error("Error uploading payment proof:", error);
+      return { data: null, error: error.message };
+    }
+  },
+
+  // Get payment proofs for an order
+  async getPaymentProofs(orderId) {
+    try {
+      const { data, error } = await supabase
+        .from("payment_proofs")
+        .select("*")
+        .eq("order_id", orderId)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      return { data: data || [], error: null };
+    } catch (error) {
+      console.error("Error fetching payment proofs:", error);
+      return { data: [], error: error.message };
+    }
+  },
+
+  // Get signed URL for payment proof file
+  async getPaymentProofUrl(filePath) {
+    try {
+      const { data, error } = await supabase.storage
+        .from("payment-proofs")
+        .createSignedUrl(filePath, 3600); // 1 hour expiry
+
+      if (error) throw error;
+
+      return { data: data.signedUrl, error: null };
+    } catch (error) {
+      console.error("Error getting payment proof URL:", error);
+      return { data: null, error: error.message };
+    }
+  },
+
+  // Update payment proof status (admin only)
+  async updatePaymentProofStatus(proofId, status, adminNotes = null) {
+    try {
+      const { data, error } = await supabase
+        .from("payment_proofs")
+        .update({
+          status,
+          admin_notes: adminNotes,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", proofId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return { data, error: null };
+    } catch (error) {
+      console.error("Error updating payment proof status:", error);
+      return { data: null, error: error.message };
+    }
+  },
 };
