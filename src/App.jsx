@@ -132,14 +132,14 @@ function App() {
               {/* RUTE ADMIN - hanya untuk admin yang sudah login */}
               <Route element={<ProtectedRoute requiredRole="admin" />}>
                 {/* Anda bisa menambahkan <AdminLayout> di sini jika perlu */}
-                <Route path="/admin/dashboard" element={<AdminHome />} />
+                {/* <Route path="/admin/dashboard" element={<AdminHome />} /> */}
                 <Route path="/admin/product" element={<AdminProduct />} />
                 <Route
                   path="/admin/testimonials"
                   element={<AdminTestimonial />}
                 />
                 <Route path="/admin/customer" element={<CustomerPage />} />
-                <Route path="/admin/order" element={<AdminOrders />} />
+                <Route path="/admin/dashboard" element={<AdminOrders />} />
                 <Route path="/admin/history" element={<HistoryPage />} />
               </Route>
 

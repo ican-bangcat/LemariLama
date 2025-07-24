@@ -20,7 +20,7 @@ const Topbar = () => {
 
       {/* Profile Section */}
       <div className="flex items-center gap-4"><IoMdNotificationsOutline />
-        <span className="text-gray-700 font-medium">George Nico</span>
+        <span className="text-gray-700 font-medium">M. Ikhsan Kurniawan</span>
         <img
           src="https://i.pravatar.cc/40"
           alt="Profile"
