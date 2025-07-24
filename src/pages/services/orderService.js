@@ -128,48 +128,56 @@ export const orderService = {
   },
 
   // Ambil pesanan user
-  async getUserOrders(userId, page = 1, limit = 10) {
-    try {
-      const offset = (page - 1) * limit;
+  // Ubah bagian ini di orderService.js
+async getUserOrders(userId, page = 1, limit = 10) {
+  try {
+    const offset = (page - 1) * limit;
 
-      const { data, error, count } = await supabase
-        .from("orders")
-        .select(
-          `
-          *,
-          order_items (
-            id,
-            product_id,
-            product_name,
-            product_price,
-            quantity,
-            size,
-            subtotal,
-            products (
-              name,
-              images
-            )
+    const { data, error, count } = await supabase
+      .from("orders")
+      .select(
+        `
+        *,
+        order_items (
+          id,
+          product_id,
+          product_name,
+          product_price,
+          quantity,
+          size,
+          subtotal,
+          products (
+            name,
+            images
           )
-        `,
-          { count: "exact" }
         )
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .range(offset, offset + limit - 1);
+      `,
+        { count: "exact" }
+      )
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit - 1);
 
-      if (error) throw error;
+    if (error) throw error;
 
-      return {
-        data: data || [],
-        error: null,
-        total: count,
-        hasMore: count > offset + limit,
-      };
-    } catch (error) {
-      console.error("Error fetching user orders:", error);
-      return { data: [], error: error.message, total: 0, hasMore: false };
-    }
-  },
+    return {
+      success: true,  // ← TAMBAHKAN INI
+      data: data || [],
+      error: null,
+      total: count,
+      hasMore: count > offset + limit,
+    };
+  } catch (error) {
+    console.error("Error fetching user orders:", error);
+    return { 
+      success: false,  // ← TAMBAHKAN INI
+      data: [], 
+      error: error.message, 
+      total: 0, 
+      hasMore: false 
+    };
+  }
+},
 
   // Ambil detail pesanan
   async getOrderById(orderId, userId = null) {
@@ -547,4 +555,183 @@ async cancelOrder(orderId, userId) {
       return { data: null, error: error.message };
     }
   },
+  
 };
+// Tambahkan fungsi ini ke orderService.js yang sudah ada
+
+// Konfirmasi pesanan diterima oleh customer
+export const confirmDelivery = async (orderId, userId) => {
+  try {
+    if (!orderId || !userId) {
+      throw new Error('Order ID and User ID are required');
+    }
+
+    // Cek apakah order milik user dan status = shipped
+    const { data: order, error: checkError } = await supabase
+      .from('orders')
+      .select('id, status, user_id')
+      .eq('id', orderId)
+      .eq('user_id', userId)
+      .eq('status', 'shipped')
+      .single();
+
+    if (checkError) {
+      throw new Error('Order not found or not eligible for delivery confirmation');
+    }
+
+    // Update status ke delivered
+    const { data, error } = await supabase
+      .from('orders')
+      .update({ 
+        status: 'delivered',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', orderId)
+      .eq('user_id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return {
+      success: true,
+      message: 'Order delivery confirmed successfully',
+      data
+    };
+
+  } catch (error) {
+    console.error('Error confirming delivery:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to confirm delivery'
+    };
+  }
+};
+
+// Cek apakah user bisa review produk dari order tertentu
+export const canReviewProduct = async (userId, productId, orderId = null) => {
+  try {
+    let query = supabase
+      .from('orders')
+      .select(`
+        id,
+        status,
+        order_items!inner (
+          product_id
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('status', 'delivered')
+      .eq('order_items.product_id', productId);
+
+    if (orderId) {
+      query = query.eq('id', orderId);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    // Cek apakah sudah pernah review
+    const { data: existingReview, error: reviewError } = await supabase
+      .from('product_reviews')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('product_id', productId);
+
+    if (reviewError) throw reviewError;
+
+    return {
+      success: true,
+      canReview: data && data.length > 0 && (!existingReview || existingReview.length === 0),
+      hasDeliveredOrder: data && data.length > 0,
+      hasExistingReview: existingReview && existingReview.length > 0
+    };
+
+  } catch (error) {
+    console.error('Error checking review eligibility:', error);
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
+
+// Get orders yang bisa di-review (delivered tapi belum di-review)
+export const getReviewableOrders = async (userId) => {
+  try {
+    if (!userId) {
+      throw new Error('User ID is required');
+    }
+
+    const { data, error } = await supabase
+      .from('orders')
+      .select(`
+        id,
+        order_number,
+        created_at,
+        total_amount,
+        status,
+        order_items (
+          id,
+          product_id,
+          product_name,
+          product_price,
+          quantity,
+          size,
+          products (
+            id,
+            name,
+            images
+          )
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('status', 'delivered')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Filter items yang belum di-review
+    const ordersWithReviewableItems = [];
+
+    for (const order of data || []) {
+      const reviewableItems = [];
+      
+      for (const item of order.order_items || []) {
+        // Cek apakah produk ini sudah di-review
+        const { data: existingReview } = await supabase
+          .from('product_reviews')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('product_id', item.product_id)
+          .eq('order_id', order.id)
+          .single();
+
+        if (!existingReview) {
+          reviewableItems.push(item);
+        }
+      }
+
+      if (reviewableItems.length > 0) {
+        ordersWithReviewableItems.push({
+          ...order,
+          reviewable_items: reviewableItems
+        });
+      }
+    }
+
+    return {
+      success: true,
+      data: ordersWithReviewableItems
+    };
+
+  } catch (error) {
+    console.error('Error fetching reviewable orders:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to fetch reviewable orders'
+    };
+  }
+};
+export const getUserOrders = orderService.getUserOrders;
