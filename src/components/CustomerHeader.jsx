@@ -90,9 +90,9 @@ const CustomerHeader = () => {
               <NavLink to="/orders" className="text-gray-700 hover:text-black font-medium">
                 Orders
               </NavLink>
-              <NavLink to="/brands" className="text-gray-700 hover:text-black font-medium">
+              {/* <NavLink to="/brands" className="text-gray-700 hover:text-black font-medium">
                 Brands
-              </NavLink>
+              </NavLink> */}
             </nav>
 
             {/* Search Bar (Desktop) */}
@@ -138,14 +138,14 @@ const CustomerHeader = () => {
                   {/* Dropdown Menu */}
                   {isDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                      <Link
+                      {/* <Link
                         to="/profile"
                         className="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
                         onClick={() => setIsDropdownOpen(false)}
                       >
                         <Settings size={18} />
                         <span>Pengaturan</span>
-                      </Link>
+                      </Link> */}
                       <Link
                         to="/address"
                         className="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:bg-gray-100 transition-colors"
@@ -198,13 +198,13 @@ const CustomerHeader = () => {
               >
                 Orders
               </NavLink>
-              <NavLink 
+              {/* <NavLink 
                 to="/brands" 
                 className="block py-2 text-gray-700 hover:text-black font-medium"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Brands
-              </NavLink>
+              </NavLink> */}
               
               {/* Search Bar (Mobile) */}
               <div className="pt-2 pb-2">

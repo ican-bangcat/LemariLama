@@ -8,7 +8,7 @@ import {
 } from "react-router-dom";
 import { useAuth } from "./pages/contexts/AuthContext"; // Sesuaikan path jika perlu
 import { CartProvider } from "./pages/contexts/CartContext"; // Import CartProvider
-import { WishlistProvider } from "./pages/contexts/WishlistContext";
+import { WishlistProvider } from "./pages/contexts/WishListContext";
 
 // Layouts
 import CustomerLayout from "./layouts/CustomerLayout";
