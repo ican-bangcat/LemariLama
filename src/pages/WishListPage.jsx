@@ -14,7 +14,7 @@ import {
   X
 } from 'lucide-react';
 
-import { useWishlist } from '../pages/contexts/WishlistContext';
+import { useWishlist } from '../pages/contexts/WishListContext';
 import { useCart } from '../pages/contexts/CartContext';
 
 import { useAuth } from '../pages/contexts/AuthContext';

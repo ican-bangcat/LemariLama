@@ -24,7 +24,7 @@ import { getProductMainImage } from "../utils/imageUtils";
 // Import context
 import { useCart } from "../pages/contexts/CartContext";
 import { useAuth } from "../pages/contexts/AuthContext";
-import { useWishlist } from "../pages/contexts/WishlistContext";
+import { useWishlist } from "../pages/contexts/WishListContext";
 // Simple cache untuk prevent re-loading
 const dataCache = {
   products: [],
