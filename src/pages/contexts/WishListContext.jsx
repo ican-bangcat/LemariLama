@@ -8,7 +8,7 @@ import {
   getWishlistCount,
   toggleWishlist,
   clearWishlist
-} from '../services/wishListService';
+} from '../services/wishlistService';
 
 const WishlistContext = createContext();
 
