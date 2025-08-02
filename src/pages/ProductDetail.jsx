@@ -25,7 +25,7 @@ import { getProductById } from "../pages/services/CustomerProduct";
 import { getProductMainImage } from "../utils/imageUtils";
 import { useCart } from "../pages/contexts/CartContext";
 import { useAuth } from "../pages/contexts/AuthContext";
-import { useWishlist } from "../pages/contexts/WishlistContext";
+import { useWishlist } from "../pages/contexts/WishListContext";
 // Tambah setelah line 20 (setelah import useWishlist)
 import {
   getProductReviews,
